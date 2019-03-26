@@ -396,14 +396,13 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
-    if(mbReset)
-    {
-        mpTracker->Reset();
-        mbReset = false;
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracker->Reset();
+            mbReset = false;
+        }
     }
-    }
-
     cv::Mat Tcw = mpTracker->GrabImageStereo(imLeft,imRight,timestamp);
 
     unique_lock<mutex> lock2(mMutexState);
@@ -434,6 +433,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
         unique_lock<mutex> lock(mMutexMode);
         if(mbActivateLocalizationMode)
         {
+            cout << "TrackRGBD : RequestStop()" << endl;
             mpLocalMapper->RequestStop();
 
             // Wait until Local Mapping has effectively stopped
@@ -455,12 +455,12 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
-    if(mbReset)
-    {
-        mpTracker->Reset();
-        mbReset = false;
-    }
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracker->Reset();
+            mbReset = false;
+        }
     }
 
     cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,timestamp);
@@ -1049,6 +1049,7 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     mpLoopCloser->ReadyForMemoryConnect = true;
     mpLocalMapper->ReadyForMemoryConnect = true;
     while(!(mpLoopCloser->WaitForMemoryConnect&&mpLocalMapper->WaitForMemoryConnect)){
+        mpLocalMapper->Release();
         std::this_thread::sleep_for(std::chrono::microseconds(2000));
     }
     
@@ -1063,28 +1064,43 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
 
     vector<KeyFrame*> mpKFs = mpMap->GetAllKeyFrames();
     vector<MapPoint*> mpMPs = mpMap->GetAllMapPoints();
-    KeyFrame* KFini = *(mpMap->mvpKeyFrameOrigins.begin());
     mpKeyFrameDatabase = new KeyFrameDatabase(mpVocabulary);
     unsigned long mnFrameId = 0;
+    unsigned long mnMapPointId = 0;
 
     for(vector<KeyFrame*>::iterator itx = mpKFs.begin(); itx != mpKFs.end(); itx++){
-        if(*itx==NULL)
+        if(*itx==NULL){
+            cout << "itx =  NULL" << endl;
             continue;
+        }
         (*itx)->SetORBvocabulary(mpVocabulary);
         (*itx)->ComputeBoW();
         mpKeyFrameDatabase->add(*itx);
-        if( (*itx)->mnFrameId > mnFrameId)
-            mnFrameId = (*itx)->mnFrameId;
-        set<MapPoint*> vmp = (*itx)->GetMapPoints();
+        (*itx)->SetKeyFrameDatabase(mpKeyFrameDatabase);
+        if( (*itx)->mnId > mnFrameId)
+            mnFrameId = (*itx)->mnId;
     }
+
+    cout << "[System] KeyFrame Complete! " << endl;
 
     for(vector<MapPoint*>::iterator itx = mpMPs.begin(); itx != mpMPs.end(); itx++){
-        if(*itx==NULL)
+        if(*itx==NULL){
+            cout << "itx = NULL" << endl;
             continue;
+        }
         (*itx)->UpdateNormalAndDepth();
+        (*itx)->getMap(mpMap);
+        if((*itx)->UID > mnMapPointId)
+            mnMapPointId = (*itx)->UID;
     }
-
+    cout << "[System] MapPoint Complete!" << endl;
     Frame::nNextId = mnFrameId;
+    KeyFrame::nNextId = mnFrameId;
+    MapPoint::nNextId = mnMapPointId;
+    cout << "[System] mnframeId : " << mnFrameId << endl;
+
+    mpMap->SetClientId(oldMap->GetClientId());
+    mpMap->SetNodeHandle(oldMap->GetNodeHandle());
     
     mpFrameDrawer->getMap(mpMap);
     mpMapDrawer->getMap(mpMap);
@@ -1099,10 +1115,17 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     delete oldDB;
 
     cout << "Done!" << endl;
+    mpSendClassToServer->ActivateConnectionToServer();
     mpLoopCloser->WaitForMemoryConnect = false;
     mpLocalMapper->WaitForMemoryConnect = false;
+    mpLoopCloser->RequestReset();
+    mpLocalMapper->RequestReset();
     mpViewer->Release();
     mpViewer->RequestLocalization();
+
+    mbActivateLocalizationMode = false;
+    mbReset = false;
+    mpSendClassToServer->ActivateConnectionToServer();
 }
 
 } //namespace ORB_SLAM

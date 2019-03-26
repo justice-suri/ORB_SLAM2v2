@@ -87,6 +87,9 @@ public:
     }
 
     void MapPointCallback(const ORB_SLAM2v2::MP::ConstPtr& msg){
+        if(msg->command == 4){
+            mServerViewer->ActivateConnection();
+        }
         if(!sm->ConnectClient)
             return;
         if(msg->command == INSERT)
@@ -120,11 +123,15 @@ public:
         }else if(msg->command == ERASE){
             sm->EraseKeyFrame(msg->mnId);
         }else if(msg->command == UPDATE){
-            sm->UpdateKeyFrame(new ServerKeyFrame(msg->mnId, Tcw, Twc, Ow, cl, msg->Parent, lel));
+            //sm->UpdateKeyFrame(new ServerKeyFrame(msg->mnId, Tcw, Twc, Ow, cl, msg->Parent, lel));
+            sm->UpdateKeyFrame(msg);
         }
     }
 
     void MapPointData(const ORB_SLAM2v2::MP::ConstPtr& msg){
+        if(msg->command == 4){
+            mServerViewer->ActivateConnection();
+        }
         if(!sm->ConnectClient)
             return;
         if(msg->command == INSERT)
@@ -141,6 +148,7 @@ public:
 
     void SendMap(const std_msgs::String::ConstPtr& msg);
     void CreateOctomap(const std_msgs::String::ConstPtr& msg);
+    void LoadMap(ServerMap *pSMap);
 
     ServerMap *sm;
     MapDrawer *mpSMapDrawer;
@@ -163,6 +171,7 @@ public:
 void Communicator::SendMap(const std_msgs::String::ConstPtr& msg){
     ifstream in(mapBinaryPath, std::ios_base::binary);
     Map *mpMap = new Map();
+    ServerMap *mpSMap = new ServerMap();
     if (!in)
     {
         cerr << "Cannot Open Mapfile: " << mapBinaryPath << " , You need create it first!" << std::endl;
@@ -172,6 +181,7 @@ void Communicator::SendMap(const std_msgs::String::ConstPtr& msg){
     {
         boost::archive::binary_iarchive ia(in, boost::archive::no_header);
         ia >> mpMap;
+        ia >> mpSMap;
     }
 
     ostringstream sarray;
@@ -181,12 +191,23 @@ void Communicator::SendMap(const std_msgs::String::ConstPtr& msg){
     }
     
     cout << "Serialized!" << endl;
+    LoadMap(mpSMap);
 
     std_msgs::String map_msg;
     map_msg.data = sarray.str();
     client_map_pub.publish(map_msg);
 
     cout << "Done!" << endl;
+}
+
+void Communicator::LoadMap(ServerMap* pSMap){
+    ServerMap* oldmap = sm;
+    sm = pSMap;
+    mpSMapDrawer->getServerMap(sm);
+    mServerViewer->getServerMap(sm);
+    mServerViewer->DeactivateConnection();
+
+    delete oldmap;
 }
 
 void Communicator::CreateOctomap(const std_msgs::String::ConstPtr& msg){

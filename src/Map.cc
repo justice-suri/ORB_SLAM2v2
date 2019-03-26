@@ -71,7 +71,7 @@ void Map::AddMapPoint(map<unsigned int, MapPoint*> mspMPs){
 
 void Map::EraseMapPoint(MapPoint *pMP)
 {
-    unique_lock<mutex> lock(mMutexMap);
+    unique_lock<mutex> lock1(mMutexMap);
     mspMapPoints.erase(pMP);
     if(mpSendClassToServer != NULL)
         mpSendClassToServer->RunMapPoint(pMP,1);
@@ -172,6 +172,10 @@ int Map::GetClientId(){
     return ClientId;
 }
 
+ros::NodeHandle Map::GetNodeHandle(){
+    return n;
+}
+
 void Map::SetSendClassToServer(SendClassToServer* pSendClassToServer){
     mpSendClassToServer = pSendClassToServer;
 
@@ -179,12 +183,13 @@ void Map::SetSendClassToServer(SendClassToServer* pSendClassToServer){
 
 void Map::clear()
 {
+    cout << "[Map] Try to clear" << endl;
     for(set<MapPoint*>::iterator sit=mspMapPoints.begin(), send=mspMapPoints.end(); sit!=send; sit++)
         delete *sit;
-
+    cout << "[Map] Delete MapPoint" << endl;
     for(set<KeyFrame*>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++)
         delete *sit;
-
+    cout << "[Map] Delete KeyFrame" << endl;
     mspMapPoints.clear();
     mspKeyFrames.clear();
     mnMaxKFid = 0;
@@ -198,7 +203,6 @@ void Map::serialize(Archive &ar, const unsigned int version)
     // don't save mutex
     ar & mspMapPoints;
     ar & mvpKeyFrameOrigins;
-    cout << "mspKeyFrames" << endl;
     ar & mspKeyFrames;
     ar & mvpReferenceMapPoints;
     ar & mnMaxKFid & mnBigChangeIdx;

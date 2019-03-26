@@ -463,10 +463,12 @@ void KeyFrame::SetBadFlag()
             return;
         }
     }
+    cout << "[KeyFrame] SetBadFlag()" << endl;
 
     for(map<KeyFrame*,int>::iterator mit = mConnectedKeyFrameWeights.begin(), mend=mConnectedKeyFrameWeights.end(); mit!=mend; mit++)
         mit->first->EraseConnection(this);
 
+    cout << "[KeyFrame] mvpMapPoints.size : " << mvpMapPoints.size() << endl;
     for(size_t i=0; i<mvpMapPoints.size(); i++)
         if(mvpMapPoints[i])
             mvpMapPoints[i]->EraseObservation(this);
@@ -494,6 +496,7 @@ void KeyFrame::SetBadFlag()
             for(set<KeyFrame*>::iterator sit=mspChildrens.begin(), send=mspChildrens.end(); sit!=send; sit++)
             {
                 KeyFrame* pKF = *sit;
+                cout << "[KeyFrame] pKF -> " << pKF->mnId << endl;
                 if(pKF->isBad())
                     continue;
 
@@ -527,6 +530,7 @@ void KeyFrame::SetBadFlag()
             else
                 break;
         }
+        cout << "[KeyFrame] mspChildrens.empty : " << mspChildrens.empty() << endl;
 
         // If a children has no covisibility links with any parent candidate, assign to the original parent of this KF
         if(!mspChildrens.empty())
@@ -540,9 +544,11 @@ void KeyFrame::SetBadFlag()
         mbBad = true;
     }
 
-
+    cout << "[KeyFrame] mpMap->EraseKeyFrame(this)" << mnId << endl;
     mpMap->EraseKeyFrame(this);
+    cout << "[KeyFrame] mpKeyFrameDB->erase(this)" << (void*)mpKeyFrameDB << endl;
     mpKeyFrameDB->erase(this);
+    cout << "[KeyFrame] Done!" << endl;
 }
 
 bool KeyFrame::isBad()
@@ -671,11 +677,11 @@ KeyFrame::KeyFrame(ServerKeyFrame* skf, Map* pMap):
     mfGridElementWidthInv(skf->mfGridElementWidthInv), mfGridElementHeightInv(skf->mfGridElementHeightInv),
     mnTrackReferenceForFrame(skf->mnTrackReferenceForFrame), mnFuseTargetForKF(skf->mnFuseTargetForKF), mnBALocalForKF(skf->mnBALocalForKF), mnBAFixedForKF(skf->mnBAFixedForKF),
     mnLoopQuery(skf->mnLoopQuery), mnLoopWords(skf->mnLoopWords), mnRelocQuery(skf->mnRelocQuery), mnRelocWords(skf->mnRelocWords), mnBAGlobalForKF(0),
-    fx(0.0), fy(0.0), cx(0.0), cy(0.0), invfx(0.0), invfy(0.0),
-    mbf(0.0), mb(0.0), mThDepth(0.0), N(skf->mvKeysUn.size()), mnScaleLevels(skf->mnScaleLevels), mfScaleFactor(skf->mfScaleFactor),
+    fx(skf->fx), fy(skf->fy), cx(skf->cx), cy(skf->cy), invfx(skf->invfx), invfy(skf->invfy), mK(skf->mK.clone()),
+    mbf(skf->mbf), mb(skf->mb), mThDepth(skf->mThDepth), N(skf->mvKeysUn.size()), mnScaleLevels(skf->mnScaleLevels), mfScaleFactor(skf->mfScaleFactor),
     mfLogScaleFactor(skf->mfLogScaleFactor), mvuRight(skf->mvuRight), mvDepth(skf->mvDepth), mvScaleFactors(skf->mvScaleFactors),
     mnMinX(0), mnMinY(0), mnMaxX(0), mvLevelSigma2(skf->mvLevelSigma2), mvInvLevelSigma2(skf->mvInvLevelSigma2),
-    mnMaxY(0), mDescriptors(skf->mDescriptors.clone()), mFeatVec(skf->mFeatVec), mvKeysUn(skf->mvKeysUn), mpMap(pMap)
+    mnMaxY(0), mDescriptors(skf->mDescriptors.clone()), mFeatVec(skf->mFeatVec), mvKeys(skf->mvKeys), mvKeysUn(skf->mvKeysUn), mpMap(pMap)
 {
     mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
     mpKeyFrameDB = static_cast<KeyFrameDatabase*>(NULL);
@@ -699,7 +705,6 @@ KeyFrame::KeyFrame():
 template<class Archive>
 void KeyFrame::serialize(Archive &ar, const unsigned int version)
 {
-    cout << "ar & nNextId" << endl;
     // no mutex needed vars
     ar & nNextId;
     ar & mnId;
@@ -729,7 +734,6 @@ void KeyFrame::serialize(Archive &ar, const unsigned int version)
     ar & const_cast<std::vector<float> &>(mvuRight);
     ar & const_cast<std::vector<float> &>(mvDepth);
     ar & const_cast<cv::Mat &>(mDescriptors);
-    cout << "Bow" << endl;
     // Bow
     ar & mBowVec & mFeatVec;
     // Pose relative to parent
@@ -740,7 +744,6 @@ void KeyFrame::serialize(Archive &ar, const unsigned int version)
     // Image bounds and calibration
     ar & const_cast<int &>(mnMinX) & const_cast<int &>(mnMinY) & const_cast<int &>(mnMaxX) & const_cast<int &>(mnMaxY);
     ar & const_cast<cv::Mat &>(mK);
-    cout << "mutex needed vars" << endl;
     // mutex needed vars, but don't lock mutex in the save/load procedure
     {
         unique_lock<mutex> lock_pose(mMutexPose);
@@ -757,17 +760,12 @@ void KeyFrame::serialize(Archive &ar, const unsigned int version)
         // Grid related
         unique_lock<mutex> lock_connection(mMutexConnections);
         ar & mGrid & mConnectedKeyFrameWeights & mvpOrderedConnectedKeyFrames & mvOrderedWeights;
-        cout << "mConnectedKeyFrameWeights : " << mConnectedKeyFrameWeights.size() << endl;
         // Spanning Tree and Loop Edges
         //ar & mbFirstConnection & mpParent & mspChildrens & mspLoopEdges;
         ar & mbFirstConnection;
-        cout << "mbFirstConnection : " << mbFirstConnection << endl;
         ar & mpParent;
-        cout << "mpParent : " << endl;
         ar & mspChildrens;
-        cout << "mspChildrens : " << mspChildrens.size() << endl;
         ar & mspLoopEdges;
-        cout << "mspLoopEdges : " << mspLoopEdges.size() << endl;
         // Bad flags
         ar & mbNotErase & mbToBeErased & mbBad & mHalfBaseline;
     }

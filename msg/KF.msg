@@ -23,6 +23,7 @@ uint64 mnFuseTargetForKF
 
 uint64 mnBALocalForKF
 uint64 mnBAFixedForKF
+uint64 mnBAGlobalForKF
 
 uint64 mnLoopQuery
 uint32 mnLoopWords
@@ -38,9 +39,25 @@ float32[] mvScaleFactors
 float32[] mvLevelSigma2
 float32[] mvInvLevelSigma2
 
+float32 fx
+float32 fy
+float32 cx
+float32 cy
+float32 invfx
+float32 invfy
+float32 mbf
+float32 mb
+float32 mThDepth
+
+int32 mnMinX
+int32 mnMinY
+int32 mnMaxX
+int32 mnMaxY
+
 float32[] mvuRight
 float32[] mvDepth
 
 string mDescriptors
+string mData
 
 uint64[] mvpMapPoints

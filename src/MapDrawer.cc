@@ -107,7 +107,10 @@ void MapDrawer::DrawServerMapPoints()
 
     
     for(auto iter = vpMPs.cbegin(); iter != vpMPs.cend(); iter++){
-        cv::Mat pos = iter->second->GetWorldPos();
+        ServerMapPoint* smp = iter->second;
+        if(!smp)
+            continue;
+        cv::Mat pos = smp->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
     }
 
@@ -128,6 +131,8 @@ void MapDrawer::DrawServerKeyFrames()
         for(auto iter = vpKFs.cbegin(); iter != vpKFs.cend(); iter++)
         {
             ServerKeyFrame* pKF = iter->second;
+            if(pKF == NULL)
+                continue;
             cv::Mat Twc = pKF->GetPoseInverse().t();
 
             glPushMatrix();

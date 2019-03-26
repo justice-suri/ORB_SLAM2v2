@@ -27,7 +27,7 @@ ServerViewer::ServerViewer(MapDrawer *pSMapDrawer, const string &strSettingPath)
     mViewpointF = fSettings["Viewer.ViewpointF"];
 }
 
-ServerViewer::ServerViewer(ServerMap *pSMap, ORBParams params, MapDrawer *pSMapDrawer, const string &strSettingPath) : mpSMapDrawer(pSMapDrawer), mpSMap(pSMap), bConnect(true)
+ServerViewer::ServerViewer(ServerMap *pSMap, ORBParams params, MapDrawer *pSMapDrawer, const string &strSettingPath) : mpSMapDrawer(pSMapDrawer), mpSMap(pSMap), bConnect(true), bDisconnectRequest(false)
 {
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
 
@@ -56,6 +56,7 @@ ServerViewer::ServerViewer(ServerMap *pSMap, ORBParams params, MapDrawer *pSMapD
     string cor = "CREATE_OCTOMAP_REQUEST" + to_string(clientId);
     map_pub = params.getNodeHandle().advertise<std_msgs::String>(cmr, 1000);
     octomap_pub = params.getNodeHandle().advertise<std_msgs::String>(cor, 1000);
+    bConnectRequest = false;
 }
 
 void ServerViewer::Run()
@@ -133,29 +134,74 @@ void ServerViewer::Run()
             map<unsigned int, KeyFrame *> mspKeyFrames;
             map<unsigned int, ServerMapPoint *> mspSMP = mpSMap->GetAllMapPoints();
             map<unsigned int, ServerKeyFrame *> mspSKF = mpSMap->GetAllKeyFrames();
+            cout << "Create KeyFrame" << endl;
+            vector<unsigned int> tmpSKF;
+            vector<unsigned int> tmpSMP;
+            vector<unsigned int> checkSKF;
             for (map<unsigned int, ServerKeyFrame *>::iterator itx = mspSKF.begin(); itx != mspSKF.end(); itx++)
             {
+                bool of = false;
                 KeyFrame *pKF = new KeyFrame(itx->second, mpMap);
-                if (pKF == NULL)
+                if(find(checkSKF.begin(), checkSKF.end() , pKF->mnId) == checkSKF.end()){
+                    checkSKF.push_back(itx->first);
+                }else{
+                    tmpSKF.push_back(itx->first);
+                }
+                if (pKF == NULL){
+                    tmpSKF.push_back(itx->first);
                     continue;
+                }
+                if (pKF->mDescriptors.rows == 0){
+                    tmpSKF.push_back(itx->first);
+                    continue;
+                }
+                for(int j = 0; j < pKF->mvKeysUn.size(); j++){
+                    if ( pKF->mvKeysUn[j].octave > pKF->mvScaleFactors.size()){
+                        tmpSKF.push_back(itx->first);
+                        of = true;
+                        break;
+                    }
+                }
+                if(of){
+                    of = false;
+                    continue;
+                }
                 mspKeyFrames.insert({itx->first, pKF});
             }
+
+            cout << "Create MapPoint" << endl;
             for (map<unsigned int, ServerMapPoint *>::iterator itx = mspSMP.begin(); itx != mspSMP.end(); itx++)
             {
                 MapPoint *pMP = new MapPoint(itx->second, mpMap);
+                cout << "mnid : " << pMP->UID << endl;
                 map<unsigned int, unsigned int> mObs = itx->second->mObservations;
+                cout << "mObs size : " << mObs.size() << endl;
                 for (map<unsigned int, unsigned int>::iterator itor = mObs.begin(); itor != mObs.end(); itor++)
                 {
                     KeyFrame *pKF = mspKeyFrames[itor->first];
                     if (pKF)
                     {
+                        cout << "AddObservation" << endl;
                         pMP->AddObservation(pKF, itor->second);
+                        cout << "AddMapPoint" << endl;
                         pKF->AddMapPoint(pMP, itor->second);
+                        cout << "insert" << endl;
                         mspMapPoints.insert({itx->first, pMP});
+                    } else {
+                        tmpSMP.push_back(itx->first);
                     }
                 }
                 pMP->SetObservation();
+                cout << "WTF?!" << endl;
             }
+
+            for(int i = 0; i < tmpSKF.size(); i++){
+                mspSKF.erase(tmpSKF[i]);
+            }
+            for(int i = 0 ; i < tmpSMP.size(); i++){
+                mspSMP.erase(tmpSMP[i]);
+            }
+
             cout << "mspMapPoints.insert" << endl;
             for (map<unsigned int, ServerKeyFrame *>::iterator itx = mspSKF.begin(); itx != mspSKF.end(); itx++)
             {
@@ -169,6 +215,7 @@ void ServerViewer::Run()
                         parentKF->AddChild(pKF);
                     }
                 }
+                pKF->UpdateConnections();
             }
 
             mpMap->AddKeyFrame(mspKeyFrames);
@@ -178,7 +225,10 @@ void ServerViewer::Run()
             cout << "Strat to serialize" << endl;;
             {
                 boost::archive::binary_oarchive oa(out, boost::archive::no_header);
+                cout << "Serialization : mpMap" << endl;
                 oa << mpMap;
+                cout << "Serialization : mpSMap" << endl;
+                oa << mpSMap;
             }
 
             cout << "Serialized!" << endl;
@@ -200,7 +250,29 @@ void ServerViewer::Run()
             octomap_pub.publish(msg);
             menuCreateOctomap = false;
         }
+
+        if (bConnectRequest){
+            menuConnect = true;
+            bConnectRequest = false;
+        }
+
+        if (bDisconnectRequest){
+            menuConnect = false;
+            bDisconnectRequest = false;
+        }
     }
+}
+
+void ServerViewer::ActivateConnection(){
+    bConnectRequest = true;
+}
+
+void ServerViewer::DeactivateConnection(){
+    bDisconnectRequest = true;
+}
+
+void ServerViewer::getServerMap(ServerMap* pSMap){
+    mpSMap = pSMap;
 }
 
 } // namespace ORB_SLAM2

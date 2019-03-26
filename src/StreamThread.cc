@@ -102,6 +102,7 @@ void SendClassToServer::RunKeyFrame(int command){
     msg.mnFuseTargetForKF = pKF->mnFuseTargetForKF;
     msg.mnBALocalForKF = pKF->mnBALocalForKF;
     msg.mnBAFixedForKF = pKF->mnBAFixedForKF;
+    msg.mnBAGlobalForKF = pKF->mnBAGlobalForKF;
     msg.mnLoopQuery = pKF->mnLoopQuery;
     msg.mnLoopWords = pKF->mnLoopWords;
     msg.mLoopScore = pKF->mLoopScore;
@@ -122,7 +123,34 @@ void SendClassToServer::RunKeyFrame(int command){
         msg.mvInvLevelSigma2.push_back(pKF->mvInvLevelSigma2[i]);
     }
 
+    msg.fx = pKF->fx;
+    msg.fy = pKF->fy;
+    msg.cx = pKF->cx;
+    msg.cy = pKF->cy;
+    msg.invfy = pKF->invfy;
+    msg.invfx = pKF->invfx;
+    msg.mbf = pKF->mbf;
+    msg.mb = pKF->mb;
+    msg.mThDepth = pKF->mThDepth;
+
+    msg.mnMinX = pKF->mnMinX;
+    msg.mnMinY = pKF->mnMinY;
+    msg.mnMaxX = pKF->mnMaxX;
+    msg.mnMaxY = pKF->mnMaxY;
+
+    KeyFrame &kf = *pKF;
+
+    ostringstream darray;
+    {
+        boost::archive::binary_oarchive da(darray, boost::archive::no_header);
+        da << kf.mTcwGBA;
+        da << kf.mTcwBefGBA;
+    }
+
+    msg.mData = darray.str();
+
     if(command == 0){
+        cv::Mat desc = kf.mDescriptorsCopy;
         for(int i = 0; i < pKF->mvuRight.size(); i++){
             msg.mvuRight.push_back(pKF->mvuRight[i]);
         }
@@ -131,13 +159,12 @@ void SendClassToServer::RunKeyFrame(int command){
         }
 
         ostringstream sarray;
-        KeyFrame &kf = *pKF;
-        cv::Mat desc = kf.mDescriptorsCopy;
         {
             boost::archive::binary_oarchive oa(sarray, boost::archive::no_header);
             oa << desc;
+            oa << kf.mvKeys;
             oa << kf.mvKeysUn;
-            oa << kf.mFeatVec;
+            oa << kf.mK;
         }
         msg.mDescriptors = sarray.str();
     }
@@ -263,6 +290,12 @@ void SendClassToServer::Run(){
     }
 
     SetFinish();
+}
+
+void SendClassToServer::ActivateConnectionToServer(){
+    ORB_SLAM2v2::MP msg;
+    msg.command = 4;
+    mp_data_pub.publish(msg);
 }
 
 

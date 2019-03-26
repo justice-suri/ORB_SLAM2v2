@@ -13,11 +13,4 @@
 	<param name="ClientId"	type="int"	value="0"/>
 </node>
 
-<node name="server_node1" pkg="ORB_SLAM2v2" type="server_node" args="$(arg vocabulary_path) $(arg settings_path)" output="screen">
-	<param name="mapBinaryPath"	type="string"	value="$(find ORB_SLAM2v2)/orbmap.bin"/>
-	<param name="mapOctomapPath"	type="string"	value="$(find ORB_SLAM2v2)/global_octomap.bt"/>
-	<param name="mapPCLPath"	type="string"	value="$(find ORB_SLAM2v2)/optimized_pointcloud.pcd"/>
-	<param name="ClientId"	type="int"	value="1"/>
-</node>
-
 </launch>

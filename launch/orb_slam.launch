@@ -15,7 +15,7 @@
 
 
 
-<node name="rgbd_node" pkg="ORB_SLAM2v2" type="rgbd_node" args="$(arg vocabulary_path) $(arg settings_path)" output="screen">
+<node name="rgbd_node0" pkg="ORB_SLAM2v2" type="rgbd_node" args="$(arg vocabulary_path) $(arg settings_path)" output="screen">
 	<!--arg name="vocabulary_path" value="$(arg vocabulary_path)"/-->
 	<!--arg name="settings_path" value="$(arg settings_path)"/-->
 	<param name="publish_tf"		type="bool"	value="false"/>

@@ -62,7 +62,7 @@ void LoopClosing::Run()
     {
         if(ReadyForMemoryConnect){
             if(mpThreadGBA){
-                mpThreadGBA->join();
+                mpThreadGBA->join();            
             }
             WaitForMemoryConnect = true;
             while(WaitForMemoryConnect){
@@ -70,12 +70,15 @@ void LoopClosing::Run()
             }
             ReadyForMemoryConnect = false;
         }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
+            cout << "[LoopClosing]Start for LoopClosing" << endl;
             // Detect loop candidates and check covisibility consistency
             if(DetectLoop())
             {
+                cout << "[LocalClosing]DetectLoop" << endl;
                // Compute similarity transformation [sR|t]
                // In the stereo/RGBD case s=1
                if(ComputeSim3())
@@ -84,10 +87,10 @@ void LoopClosing::Run()
                    CorrectLoop();
                }
             }
+            cout << "[LoopClosing]Done" << endl;
         }
 
         ResetIfRequested();
-
         if(CheckFinish())
             break;
 
@@ -508,6 +511,7 @@ void LoopClosing::CorrectLoop()
                 pMPi->mnCorrectedByKF = mpCurrentKF->mnId;
                 pMPi->mnCorrectedReference = pKFi->mnId;
                 pMPi->UpdateNormalAndDepth();
+                mpMap->UpdateMapPoint(pMPi);
             }
 
             // Update keyframe pose with corrected Sim3. First transform Sim3 to SE3 (scale translation)
@@ -645,9 +649,12 @@ void LoopClosing::ResetIfRequested()
     unique_lock<mutex> lock(mMutexReset);
     if(mbResetRequested)
     {
+        cout << "[LoopCloing] ResetIfRequested" << endl;
         mlpLoopKeyFrameQueue.clear();
         mLastLoopKFid=0;
         mbResetRequested=false;
+        cout << "[LoopClosing] ResetIfRequested Done!" << endl;
+        std::this_thread::sleep_for(std::chrono::microseconds(5000));
     }
 }
 

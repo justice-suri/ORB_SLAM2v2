@@ -375,6 +375,7 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 
 void Tracking::Track()
 {
+    cout << "[Tracking]Start!" << endl;
     if(mState==NO_IMAGES_YET)
     {
         mState = NOT_INITIALIZED;
@@ -401,6 +402,7 @@ void Tracking::Track()
     {
         // System is initialized. Track Frame.
         bool bOK;
+        cout << "bOK = " << bOK << endl;
 
         // Initial camera pose estimation using motion model or relocalization (if tracking is lost)
         if(!mbOnlyTracking)
@@ -502,7 +504,7 @@ void Tracking::Track()
         }
 
         mCurrentFrame.mpReferenceKF = mpReferenceKF;
-
+        cout << "mpReferenceKF : " << mpReferenceKF->mnId << endl;
         // If we have an initial estimation of the camera pose and matching. Track the local map.
         if(!mbOnlyTracking)
         {
@@ -625,6 +627,7 @@ void Tracking::Track()
             mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
         mLastFrame = Frame(mCurrentFrame);
+        cout << "[Tracking] Finish!" << endl;
     }
 
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
@@ -645,7 +648,7 @@ void Tracking::Track()
         mlFrameTimes.push_back(mlFrameTimes.back());
         mlbLost.push_back(mState==LOST);
     }
-
+    cout << "[Tracking] This can happen if tracking is lost" << endl;
 }
 
 
@@ -1644,6 +1647,7 @@ void Tracking::Reset()
         mpViewer->RequestStop();
         while(!mpViewer->isStopped())
         {
+            cout << "[Tracking]: " << mpViewer->isStopped() << endl;
             std::this_thread::sleep_for(std::chrono::microseconds(3000));
         }
     }
@@ -1665,22 +1669,26 @@ void Tracking::Reset()
 
     // Clear Map (this erase MapPoints and KeyFrames)
     mpMap->clear();
+    cout << "mpMap->clear()" << endl;
 
     KeyFrame::nNextId = 0;
     Frame::nNextId = 0;
     mState = NO_IMAGES_YET;
-
+    cout << "[Tracking] if(mpInitializer)" << endl;
     if(mpInitializer)
     {
         delete mpInitializer;
         mpInitializer = static_cast<Initializer*>(NULL);
     }
-
+    cout << "mlRelativeFramePose" << endl;
     mlRelativeFramePoses.clear();
+    cout << "mlpReferences" << endl;
     mlpReferences.clear();
+    cout << "mlFrameTimes" << endl;
     mlFrameTimes.clear();
+    cout << "mlbLost" << endl;
     mlbLost.clear();
-
+    cout << "if(mpViewer)" << endl;
     if(mpViewer)
         mpViewer->Release();
 }

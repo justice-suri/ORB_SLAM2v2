@@ -55,7 +55,7 @@ MapPoint::MapPoint(const cv::Mat &Pos, Map* pMap, Frame* pFrame, const int &idxF
     mnCorrectedReference(0), mnBAGlobalForKF(0), mpRefKF(static_cast<KeyFrame*>(NULL)), mnVisible(1),
     mnFound(1), mbBad(false), mpReplaced(NULL), mpMap(pMap)
 {
-    UID = 0;
+    UID = -2;
     Pos.copyTo(mWorldPos);
     cv::Mat Ow = pFrame->GetCameraCenter();
     mNormalVector = mWorldPos - Ow;
@@ -108,7 +108,6 @@ void MapPoint::AddObservation(KeyFrame* pKF, size_t idx)
     if(mObservations.count(pKF))
         return;
     mObservations[pKF]=idx;
-
     if(pKF->mvuRight[idx]>=0)
         nObs+=2;
     else
@@ -137,16 +136,18 @@ void MapPoint::EraseObservation(KeyFrame* pKF)
             if(mpRefKF==pKF)
                 mpRefKF=mObservations.begin()->first;
 
-            cout << "nObs : " << nObs << endl;
-            cout << "mObservations size : " << mObservations.size() << endl;
-            if(mpRefKF==NULL){
+            /*cout << "pKF : " << pKF->mnId << "\t";
+            cout << "UID : " << UID << "\t";
+            cout << "nObs:" << nObs << "\t";
+            cout << "mObservations size : " << mObservations.size() << "\t";
+            if(mpRefKF == NULL){
                 cout << "mpRefKF : NULL" << endl;
             }else{
                 cout << "mpRefKF : " << mpRefKF->mnId << endl;
-            }
+            }*/
 
             // If only 2 observations or less, discard point
-            if(nObs<=2)
+            if(nObs<=2 || mpRefKF == NULL)
                 bBad=true;
         }
     }
@@ -259,6 +260,7 @@ float MapPoint::GetFoundRatio()
 
 void MapPoint::ComputeDistinctiveDescriptors()
 {
+    //cout << "[MapPoint] Retrieve all observed descriptors" << endl;
     // Retrieve all observed descriptors
     vector<cv::Mat> vDescriptors;
 
@@ -279,14 +281,14 @@ void MapPoint::ComputeDistinctiveDescriptors()
     for(map<KeyFrame*,size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
     {
         KeyFrame* pKF = mit->first;
-
+        //cout << "[MapPoint] pKF = " << pKF->mnId << " mDescriptors.rows = " << pKF->mDescriptors.rows << " size_t = " << mit->second << endl;
         if(!pKF->isBad())
             vDescriptors.push_back(pKF->mDescriptors.row(mit->second));
     }
 
     if(vDescriptors.empty())
         return;
-
+    //cout << "Compute distances between them" << endl;
     // Compute distances between them
     const size_t N = vDescriptors.size();
 
@@ -301,7 +303,7 @@ void MapPoint::ComputeDistinctiveDescriptors()
             Distances[j][i]=distij;
         }
     }
-
+    //cout << "Take the descriptor with least median distance to the rest" << endl;
     // Take the descriptor with least median distance to the rest
     int BestMedian = INT_MAX;
     int BestIdx = 0;
@@ -386,23 +388,28 @@ void MapPoint::UpdateNormalAndDepth()
     {
         KeyFrame* pKF = mit->first;
         cv::Mat Owi = pKF->GetCameraCenter();
+        //cout << "Owi : " << Owi << endl;
         cv::Mat normali = mWorldPos - Owi;
+        //cout << "normali : " << normali << endl;
         normal = normal + normali/cv::norm(normali);
         n++;
     }
     cv::Mat PC = Pos - pRefKF->GetCameraCenter();
     const float dist = cv::norm(PC);
+    ///cout << "dist : " << dist << endl;
     const int level = pRefKF->mvKeysUn[observations[pRefKF]].octave;
+    ///cout << "level : " << level << endl;
+    ///cout << "mvScaleFactors : " << pRefKF->mvScaleFactors.size() << endl;
     const float levelScaleFactor =  pRefKF->mvScaleFactors[level];
+    ///cout << "levelScaleFactor = " << levelScaleFactor << endl;
     const int nLevels = pRefKF->mnScaleLevels;
+    //cout << "nLevels : " << nLevels << endl;
     {
         unique_lock<mutex> lock3(mMutexPos);
         mfMaxDistance = dist*levelScaleFactor;
         mfMinDistance = mfMaxDistance/pRefKF->mvScaleFactors[nLevels-1];
         mNormalVector = normal/n;
     }
-
-    mpMap->UpdateMapPoint(this);
 }
 
 float MapPoint::GetMinDistanceInvariance()
@@ -457,6 +464,10 @@ int MapPoint::GetVisible(){
 
 int MapPoint::GetmnFound(){
     return mnFound;
+}
+
+void MapPoint::getMap(Map* pMap){
+    mpMap = pMap;
 }
 
 MapPoint::MapPoint(ServerMapPoint *smp, Map* pMap):
