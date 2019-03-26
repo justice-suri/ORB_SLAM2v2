@@ -260,7 +260,7 @@ float MapPoint::GetFoundRatio()
 
 void MapPoint::ComputeDistinctiveDescriptors()
 {
-    //cout << "[MapPoint] Retrieve all observed descriptors" << endl;
+    cout << "[MapPoint] Retrieve all observed descriptors" << endl;
     // Retrieve all observed descriptors
     vector<cv::Mat> vDescriptors;
 
@@ -281,14 +281,14 @@ void MapPoint::ComputeDistinctiveDescriptors()
     for(map<KeyFrame*,size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
     {
         KeyFrame* pKF = mit->first;
-        //cout << "[MapPoint] pKF = " << pKF->mnId << " mDescriptors.rows = " << pKF->mDescriptors.rows << " size_t = " << mit->second << endl;
+        cout << "[MapPoint] pKF = " << pKF->mnId << " mDescriptors.rows = " << pKF->mDescriptors.rows << " size_t = " << mit->second << endl;
         if(!pKF->isBad())
             vDescriptors.push_back(pKF->mDescriptors.row(mit->second));
     }
 
     if(vDescriptors.empty())
         return;
-    //cout << "Compute distances between them" << endl;
+    cout << "Compute distances between them" << endl;
     // Compute distances between them
     const size_t N = vDescriptors.size();
 
@@ -303,7 +303,7 @@ void MapPoint::ComputeDistinctiveDescriptors()
             Distances[j][i]=distij;
         }
     }
-    //cout << "Take the descriptor with least median distance to the rest" << endl;
+    cout << "Take the descriptor with least median distance to the rest" << endl;
     // Take the descriptor with least median distance to the rest
     int BestMedian = INT_MAX;
     int BestIdx = 0;
