@@ -887,12 +887,13 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
             continue;
 
         int nPredictedLevel = pMP->PredictScale(dist3D,pKF);
-
+        cout << "mvScaleFactors " << pKF->mvScaleFactors.size() << endl;
+        cout << "search in a radius : " << nPredictedLevel << endl;
         // Search in a radius
         const float radius = th*pKF->mvScaleFactors[nPredictedLevel];
-
+        cout << "radius : " << radius << endl;
         const vector<size_t> vIndices = pKF->GetFeaturesInArea(u,v,radius);
-
+        cout << "vIndices : " << vIndices.size() << endl;
         if(vIndices.empty())
             continue;
 
@@ -905,7 +906,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
         for(vector<size_t>::const_iterator vit=vIndices.begin(), vend=vIndices.end(); vit!=vend; vit++)
         {
             const size_t idx = *vit;
-
+            cout << "mvKeysUn " << pKF->mvKeysUn.size() << " idx " << idx << endl;
             const cv::KeyPoint &kp = pKF->mvKeysUn[idx];
 
             const int &kpLevel= kp.octave;
@@ -949,7 +950,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
                 bestIdx = idx;
             }
         }
-
+        cout << "If there is already a mappoint" << endl;
         // If there is already a MapPoint replace otherwise add new measurement
         if(bestDist<=TH_LOW)
         {

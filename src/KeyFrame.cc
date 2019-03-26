@@ -46,11 +46,15 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
     mnId=nNextId++;
 
     mGrid.resize(mnGridCols);
+    gridCopy.resize(mnGridCols);
     for(int i=0; i<mnGridCols;i++)
     {
         mGrid[i].resize(mnGridRows);
-        for(int j=0; j<mnGridRows; j++)
+        gridCopy[i].resize(mnGridRows);
+        for(int j=0; j<mnGridRows; j++){
             mGrid[i][j] = F.mGrid[i][j];
+            gridCopy[i][j] = F.mGrid[i][j];
+        }
     }
 
     SetPose(F.mTcw);    
@@ -297,7 +301,7 @@ void KeyFrame::UpdateConnections()
         unique_lock<mutex> lockMPs(mMutexFeatures);
         vpMP = mvpMapPoints;
     }
-
+    cout << "[KeyFrame] For all map points in keyframe check in which" << endl;
     //For all map points in keyframe check in which other keyframes are they seen
     //Increase counter for those keyframes
     for(vector<MapPoint*>::iterator vit=vpMP.begin(), vend=vpMP.end(); vit!=vend; vit++)
@@ -319,11 +323,11 @@ void KeyFrame::UpdateConnections()
             KFcounter[mit->first]++;
         }
     }
-
+    cout << "This should not happen" << endl;
     // This should not happen
     if(KFcounter.empty())
         return;
-
+    cout << "if the counter is greater than threshold" << endl;
     //If the counter is greater than threshold add connection
     //In case no keyframe counter is over threshold add the one with maximum counter
     int nmax=0;
@@ -342,7 +346,9 @@ void KeyFrame::UpdateConnections()
         if(mit->second>=th)
         {
             vPairs.push_back(make_pair(mit->second,mit->first));
+            cout << "Try to add connection" << endl;
             (mit->first)->AddConnection(this,mit->second);
+            cout << "Done" << endl;
         }
     }
 
@@ -363,7 +369,7 @@ void KeyFrame::UpdateConnections()
 
     {
         unique_lock<mutex> lockCon(mMutexConnections);
-
+        cout << "mspConnectedKeyFrames " << endl;
         // mspConnectedKeyFrames = spConnectedKeyFrames;
         mConnectedKeyFrameWeights = KFcounter;
         mvpOrderedConnectedKeyFrames = vector<KeyFrame*>(lKFs.begin(),lKFs.end());
@@ -579,7 +585,7 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
 {
     vector<size_t> vIndices;
     vIndices.reserve(N);
-
+    cout << "N : " << N << endl;
     const int nMinCellX = max(0,(int)floor((x-mnMinX-r)*mfGridElementWidthInv));
     if(nMinCellX>=mnGridCols)
         return vIndices;
@@ -595,7 +601,7 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
     const int nMaxCellY = min((int)mnGridRows-1,(int)ceil((y-mnMinY+r)*mfGridElementHeightInv));
     if(nMaxCellY<0)
         return vIndices;
-
+    cout << nMinCellX << " " << nMaxCellX << " " << nMinCellY << " " << nMaxCellY << endl;
     for(int ix = nMinCellX; ix<=nMaxCellX; ix++)
     {
         for(int iy = nMinCellY; iy<=nMaxCellY; iy++)
@@ -603,6 +609,7 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
             const vector<size_t> vCell = mGrid[ix][iy];
             for(size_t j=0, jend=vCell.size(); j<jend; j++)
             {
+                cout << "mvKeysUn : " << mvKeysUn.size() << endl;
                 const cv::KeyPoint &kpUn = mvKeysUn[vCell[j]];
                 const float distx = kpUn.pt.x-x;
                 const float disty = kpUn.pt.y-y;
@@ -676,17 +683,19 @@ KeyFrame::KeyFrame(ServerKeyFrame* skf, Map* pMap):
     mnId(skf->mnId), mnFrameId(skf->mnFrameId),  mTimeStamp(skf->mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
     mfGridElementWidthInv(skf->mfGridElementWidthInv), mfGridElementHeightInv(skf->mfGridElementHeightInv),
     mnTrackReferenceForFrame(skf->mnTrackReferenceForFrame), mnFuseTargetForKF(skf->mnFuseTargetForKF), mnBALocalForKF(skf->mnBALocalForKF), mnBAFixedForKF(skf->mnBAFixedForKF),
-    mnLoopQuery(skf->mnLoopQuery), mnLoopWords(skf->mnLoopWords), mnRelocQuery(skf->mnRelocQuery), mnRelocWords(skf->mnRelocWords), mnBAGlobalForKF(0),
-    fx(skf->fx), fy(skf->fy), cx(skf->cx), cy(skf->cy), invfx(skf->invfx), invfy(skf->invfy), mK(skf->mK.clone()),
+    mnLoopQuery(skf->mnLoopQuery), mnLoopWords(skf->mnLoopWords), mnRelocQuery(skf->mnRelocQuery), mnRelocWords(skf->mnRelocWords), mnBAGlobalForKF(skf->mnBAGlobalForKF),
+    fx(skf->fx), fy(skf->fy), cx(skf->cx), cy(skf->cy), invfx(skf->invfx), invfy(skf->invfy), mK(skf->mK.clone()), mGrid(skf->mGrid),
     mbf(skf->mbf), mb(skf->mb), mThDepth(skf->mThDepth), N(skf->mvKeysUn.size()), mnScaleLevels(skf->mnScaleLevels), mfScaleFactor(skf->mfScaleFactor),
     mfLogScaleFactor(skf->mfLogScaleFactor), mvuRight(skf->mvuRight), mvDepth(skf->mvDepth), mvScaleFactors(skf->mvScaleFactors),
-    mnMinX(0), mnMinY(0), mnMaxX(0), mvLevelSigma2(skf->mvLevelSigma2), mvInvLevelSigma2(skf->mvInvLevelSigma2),
-    mnMaxY(0), mDescriptors(skf->mDescriptors.clone()), mFeatVec(skf->mFeatVec), mvKeys(skf->mvKeys), mvKeysUn(skf->mvKeysUn), mpMap(pMap)
+    mnMinX(skf->mnMinX), mnMinY(skf->mnMinY), mnMaxX(skf->mnMaxX), mvLevelSigma2(skf->mvLevelSigma2), mvInvLevelSigma2(skf->mvInvLevelSigma2),
+    mnMaxY(skf->mnMaxY), mDescriptors(skf->mDescriptors.clone()), mFeatVec(skf->mFeatVec), mvKeys(skf->mvKeys), mvKeysUn(skf->mvKeysUn), mpMap(pMap)
 {
     mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
     mpKeyFrameDB = static_cast<KeyFrameDatabase*>(NULL);
     mpParent = static_cast<KeyFrame*>(NULL);
     SetPose(skf->Tcw.clone());
+    mTcwGBA = skf->mTcwGBA.clone();
+    mTcwBefGBA = skf->mTcwBefGBA.clone();
 }
     
 

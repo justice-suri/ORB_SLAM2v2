@@ -125,6 +125,7 @@ public:
     void SetORBvocabulary(ORBVocabulary *porbv) {mpORBvocabulary=porbv;}
     void SetMap(Map *pMap){mpMap = pMap;}
     void SetKeyFrameDatabase(KeyFrameDatabase* pKeyFrameDB){mpKeyFrameDB = pKeyFrameDB;}
+    std::vector< std::vector <std::vector<size_t> > > GetGrid(){return gridCopy;}
 private:
     // serialize is recommended to be private
     friend class boost::serialization::access;
@@ -180,6 +181,7 @@ public:
     const std::vector<float> mvDepth; // negative value for monocular points
     const cv::Mat mDescriptors;
     const cv::Mat mDescriptorsCopy;
+    std::vector< std::vector <std::vector<size_t> > > gridCopy;
 
     //BoW
     DBoW2::BowVector mBowVec;

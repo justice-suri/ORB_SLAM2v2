@@ -396,12 +396,12 @@ void MapPoint::UpdateNormalAndDepth()
     }
     cv::Mat PC = Pos - pRefKF->GetCameraCenter();
     const float dist = cv::norm(PC);
-    ///cout << "dist : " << dist << endl;
+    //cout << "dist : " << dist << endl;
     const int level = pRefKF->mvKeysUn[observations[pRefKF]].octave;
-    ///cout << "level : " << level << endl;
-    ///cout << "mvScaleFactors : " << pRefKF->mvScaleFactors.size() << endl;
+    //cout << "level : " << level << endl;
+    //cout << "mvScaleFactors : " << pRefKF->mvScaleFactors.size() << endl;
     const float levelScaleFactor =  pRefKF->mvScaleFactors[level];
-    ///cout << "levelScaleFactor = " << levelScaleFactor << endl;
+    //cout << "levelScaleFactor = " << levelScaleFactor << endl;
     const int nLevels = pRefKF->mnScaleLevels;
     //cout << "nLevels : " << nLevels << endl;
     {
@@ -472,13 +472,14 @@ void MapPoint::getMap(Map* pMap){
 
 MapPoint::MapPoint(ServerMapPoint *smp, Map* pMap):
     mnId(smp->mnId), UID(smp->GetUID()), nObs(smp->nObs), mnTrackReferenceForFrame(smp->mnTrackReferenceForFrame),
-    mnLastFrameSeen(smp->mnLastFrameSeen), mnBALocalForKF(0), mnFuseCandidateForKF(0), mnLoopPointForKF(0), mnCorrectedByKF(0),
-    mnCorrectedReference(0), mnBAGlobalForKF(0),mnVisible(smp->mnVisible), mnFound(smp->mnFound), mbBad(false),
+    mnLastFrameSeen(smp->mnLastFrameSeen), mnBALocalForKF(smp->mnBALocalForKF), mnFuseCandidateForKF(smp->mnFuseCandidateForKF), mnLoopPointForKF(smp->mnLoopPointForKF), mnCorrectedByKF(smp->mnCorrectedByKF),
+    mnCorrectedReference(smp->mnCorrectedReference), mnBAGlobalForKF(smp->mnBAGlobalForKF),mnVisible(smp->mnVisible), mnFound(smp->mnFound), mbBad(false),
     mpReplaced(static_cast<MapPoint*>(NULL)), mfMinDistance(smp->mfMinDistance), mfMaxDistance(smp->mfMaxDistance), mpMap(pMap),
     mnFirstKFid(smp->mnFirstKFid), mnFirstFrame(smp->mnFirstFrame)
 {
     mWorldPos = smp->mWorldPos.clone();
     mDescriptor = smp->mDescriptor.clone();
+    mPosGBA = smp->mPosGBA.clone();
 }
 
 MapPoint::MapPoint():

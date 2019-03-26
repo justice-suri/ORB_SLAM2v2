@@ -61,6 +61,15 @@ public:
     int mnFound;
     float mfMinDistance;
     float mfMaxDistance;
+
+    long unsigned int mnBALocalForKF;
+    long unsigned int mnFuseCandidateForKF;
+    long unsigned int mnLoopPointForKF;
+    long unsigned int mnCorrectedByKF;
+    long unsigned int mnCorrectedReference;
+    long unsigned int mnBAGlobalForKF;
+
+    cv::Mat mPosGBA;
 };
 
 class ServerKeyFrame
@@ -150,6 +159,8 @@ public:
     // Calibration parameters
     float fx, fy, cx, cy, invfx, invfy, mbf, mb, mThDepth;
     int mnMinX, mnMinY, mnMaxX, mnMaxY;
+
+    std::vector< std::vector <std::vector<size_t> > > mGrid;
 };
 
 class ServerMap

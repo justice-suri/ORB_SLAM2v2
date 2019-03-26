@@ -778,6 +778,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
         g2o::VertexSBAPointXYZ* vPoint = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(pMP->mnId+maxKFid+1));
         pMP->SetWorldPos(Converter::toCvMat(vPoint->estimate()));
         pMP->UpdateNormalAndDepth();
+        pMap->UpdateMapPoint(pMP);
     }
 }
 
@@ -1047,6 +1048,7 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
         pMP->SetWorldPos(cvCorrectedP3Dw);
 
         pMP->UpdateNormalAndDepth();
+        pMap->UpdateMapPoint(pMP);
     }
 }
 

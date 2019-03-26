@@ -156,7 +156,8 @@ void ServerViewer::Run()
                     continue;
                 }
                 for(int j = 0; j < pKF->mvKeysUn.size(); j++){
-                    if ( pKF->mvKeysUn[j].octave > pKF->mvScaleFactors.size()){
+                    if ( pKF->mvKeysUn[j].octave >= pKF->mvScaleFactors.size()){
+                        cout << "pKF->mvKeysUn[j].octave >= pKF->mvScaleFactors.size()" << endl;
                         tmpSKF.push_back(itx->first);
                         of = true;
                         break;
@@ -175,17 +176,17 @@ void ServerViewer::Run()
                 MapPoint *pMP = new MapPoint(itx->second, mpMap);
                 cout << "mnid : " << pMP->UID << endl;
                 map<unsigned int, unsigned int> mObs = itx->second->mObservations;
-                cout << "mObs size : " << mObs.size() << endl;
+                //cout << "mObs size : " << mObs.size() << endl;
                 for (map<unsigned int, unsigned int>::iterator itor = mObs.begin(); itor != mObs.end(); itor++)
                 {
                     KeyFrame *pKF = mspKeyFrames[itor->first];
                     if (pKF)
                     {
-                        cout << "AddObservation" << endl;
+                        //cout << "AddObservation" << endl;
                         pMP->AddObservation(pKF, itor->second);
-                        cout << "AddMapPoint" << endl;
+                        //cout << "AddMapPoint" << endl;
                         pKF->AddMapPoint(pMP, itor->second);
-                        cout << "insert" << endl;
+                        //cout << "insert" << endl;
                         mspMapPoints.insert({itx->first, pMP});
                     } else {
                         tmpSMP.push_back(itx->first);

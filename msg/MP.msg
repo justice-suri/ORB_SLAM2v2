@@ -23,5 +23,12 @@ int32 mnFound
 float32 mfMinDistance
 float32 mfMaxDistance
 
+uint64 mnBALocalForKF
+uint64 mnBAGlobalForKF
+uint64 mnLoopPointForKF
+uint64 mnCorrectedByKF
+float64[3] mPosGBA
+uint64 mnCorrectedReference
+
 Observation[] mObservations
 uint8[32] mDescriptor

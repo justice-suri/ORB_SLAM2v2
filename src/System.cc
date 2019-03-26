@@ -1049,7 +1049,8 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     mpLoopCloser->ReadyForMemoryConnect = true;
     mpLocalMapper->ReadyForMemoryConnect = true;
     while(!(mpLoopCloser->WaitForMemoryConnect&&mpLocalMapper->WaitForMemoryConnect)){
-        mpLocalMapper->Release();
+        //mpLocalMapper->Release();
+        cout << mpLoopCloser->WaitForMemoryConnect<< " " << mpLocalMapper->WaitForMemoryConnect << endl;
         std::this_thread::sleep_for(std::chrono::microseconds(2000));
     }
     

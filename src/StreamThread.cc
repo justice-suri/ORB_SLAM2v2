@@ -158,6 +158,7 @@ void SendClassToServer::RunKeyFrame(int command){
             msg.mvDepth.push_back(pKF->mvDepth[i]);
         }
 
+        const std::vector< std::vector <std::vector<size_t> > > mGrid = kf.GetGrid();
         ostringstream sarray;
         {
             boost::archive::binary_oarchive oa(sarray, boost::archive::no_header);
@@ -165,6 +166,7 @@ void SendClassToServer::RunKeyFrame(int command){
             oa << kf.mvKeys;
             oa << kf.mvKeysUn;
             oa << kf.mK;
+            oa << mGrid;
         }
         msg.mDescriptors = sarray.str();
     }
@@ -238,6 +240,17 @@ void SendClassToServer::RunMapPoint(MapPoint* _pMP, int command){
     msg.mnFound = _pMP->GetFound();
     msg.mfMinDistance = _pMP->GetMinDistanceInvariance()/0.8f;
     msg.mfMaxDistance = _pMP->GetMaxDistanceInvariance()/1.2f;
+
+    msg.mnBALocalForKF = _pMP->mnBALocalForKF;
+    msg.mnBAGlobalForKF = _pMP->mnBAGlobalForKF;
+    msg.mnFuseCandidateForKF = _pMP->mnFuseCandidateForKF;
+    msg.mnLoopPointForKF = _pMP->mnLoopPointForKF;
+    msg.mnCorrectedByKF = _pMP->mnCorrectedByKF;
+    if(_pMP->mnBAGlobalForKF != 0)
+        msg.mPosGBA = {_pMP->mPosGBA.at<float>(0),_pMP->mPosGBA.at<float>(1),_pMP->mPosGBA.at<float>(2)};
+    else{
+        msg.mPosGBA = {0,0,0};
+    }
 
     mp_data_pub.publish(msg);
 }

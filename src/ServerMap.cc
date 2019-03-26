@@ -35,6 +35,16 @@ ServerMapPoint::ServerMapPoint(const ORB_SLAM2v2::MP::ConstPtr& msg){
     mnFound = msg->mnFound;
     mfMinDistance = msg->mfMinDistance;
     mfMaxDistance = msg->mfMaxDistance;
+
+    mnBALocalForKF = msg->mnBALocalForKF;
+    mnBAGlobalForKF = msg->mnBAGlobalForKF;
+    mnFuseCandidateForKF = msg->mnFuseCandidateForKF;
+    mnLoopPointForKF = msg->mnLoopPointForKF;
+    mnCorrectedByKF = msg->mnCorrectedByKF;
+    float mposgba[3] = {msg->mPosGBA[0],msg->mPosGBA[1],msg->mPosGBA[2]};
+    cv::Mat mPosgba(3,1,CV_32F, mposgba);
+    mPosGBA = mPosgba.clone();
+    mnBALocalForKF = msg->mnBALocalForKF;
 }
 
 ServerMapPoint::ServerMapPoint(unsigned int uid, unsigned int mnid, cv::Mat pos){
@@ -59,6 +69,7 @@ ServerKeyFrame::ServerKeyFrame(const ORB_SLAM2v2::KF::ConstPtr& msg){
         ia >> mvKeys;
         ia >> mvKeysUn;
         ia >> mK;
+        ia >> mGrid;
     }
 
     stringstream darray(msg->mData);
@@ -481,6 +492,7 @@ void ServerKeyFrame::serialize(Archive &ar, const unsigned int version)
     ar & const_cast<int &>(mnMinX) & const_cast<int &>(mnMinY) & const_cast<int &>(mnMaxX) & const_cast<int &>(mnMaxY);
     // LoopClosing related vars
     ar & mTcwGBA & mTcwBefGBA & mnBAGlobalForKF;
+    ar & mGrid;
 }
 template void ServerKeyFrame::serialize(boost::archive::binary_iarchive&, const unsigned int);
 template void ServerKeyFrame::serialize(boost::archive::binary_oarchive&, const unsigned int);
@@ -515,6 +527,10 @@ void ServerMapPoint::serialize(Archive &ar, const unsigned int version)
 
     ar & mObservations;
     ar & mDescriptor;
+    // Local Mapping related vars
+    ar & mnBALocalForKF & mnFuseCandidateForKF;
+    // Loop Closing related vars
+    ar & mnLoopPointForKF & mnCorrectedByKF & mnCorrectedReference & mPosGBA & mnBAGlobalForKF;
 }
 template void ServerMapPoint::serialize(boost::archive::binary_iarchive&, const unsigned int);
 template void ServerMapPoint::serialize(boost::archive::binary_oarchive&, const unsigned int);
