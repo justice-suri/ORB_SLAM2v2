@@ -88,6 +88,8 @@ public:
     int GetVisible();
     int GetmnFound();
 
+    void getMap(Map *pMap);
+
 public:
     // for serialization
     MapPoint();

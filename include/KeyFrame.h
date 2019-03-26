@@ -124,6 +124,7 @@ public:
     KeyFrame(ServerKeyFrame* skf, Map *pMap); // Create map to send a map to server
     void SetORBvocabulary(ORBVocabulary *porbv) {mpORBvocabulary=porbv;}
     void SetMap(Map *pMap){mpMap = pMap;}
+    void SetKeyFrameDatabase(KeyFrameDatabase* pKeyFrameDB){mpKeyFrameDB = pKeyFrameDB;}
 private:
     // serialize is recommended to be private
     friend class boost::serialization::access;

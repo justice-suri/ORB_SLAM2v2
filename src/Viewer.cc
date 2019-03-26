@@ -177,7 +177,6 @@ void Viewer::Run()
             bLocalizationMode = true;
             bFollow = true;
             menuFollowCamera = true;
-            char line[1024];
             mpSystem->RequestLoadMap();
             menuLoad = false;
         }
@@ -194,7 +193,6 @@ void Viewer::Run()
             bLocalizationMode = true;
             bFollow = true;
             menuFollowCamera = true;
-            char line[1024];
             mpSystem->ServiceLoadMap(mstrfilename);
             cout << "trying to request load map"<< endl;
 
@@ -206,13 +204,13 @@ void Viewer::Run()
 
         if(Stop())
         {
+            cout << "[Viewer] Wait for stop" << endl;
             while(isStopped())
             {
-                cout << "Wait for stop in Viewer mbstopped : " << mbStopped << " mbStopRequested : " << mbStopRequested << endl;
                 std::this_thread::sleep_for(std::chrono::microseconds(3000));
             }
         }
-
+        cout << "CheckFinish() : " << CheckFinish() << endl;
         if(CheckFinish())
             break;
     }
@@ -252,6 +250,7 @@ bool Viewer::isFinished()
 void Viewer::RequestStop()
 {
     unique_lock<mutex> lock(mMutexStop);
+    cout << "[Viewer] RequestStop()" << endl;
     if(!mbStopped)
         mbStopRequested = true;
 }
@@ -284,7 +283,9 @@ bool Viewer::Stop()
 void Viewer::Release()
 {
     unique_lock<mutex> lock(mMutexStop);
+    cout << "[Viewer] Try to release()" << endl;
     mbStopped = false;
+    cout << "[Viewer] Release done!" << endl;
 }
 
 void Viewer::setLoadedMap(Tracking *pTracking){

@@ -72,6 +72,7 @@ public:
     void SetClientId(int id);
     void SetNodeHandle(ros::NodeHandle nh);
     int GetClientId();
+    ros::NodeHandle GetNodeHandle();
 
     void SetSendClassToServer(SendClassToServer* pSendClassToServer);
 

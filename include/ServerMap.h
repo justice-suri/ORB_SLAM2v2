@@ -69,6 +69,7 @@ public:
     ServerKeyFrame(){};
     
     ServerKeyFrame(const ORB_SLAM2v2::KF::ConstPtr& msg);
+    ServerKeyFrame(const ORB_SLAM2v2::KF::ConstPtr& msg, int command);
     ServerKeyFrame(unsigned int mnid, cv::Mat tcw, cv::Mat twc, cv::Mat ow, vector<long unsigned int>  clist, int parentid, vector<long unsigned int>  llist);
 
     unsigned int GetKeyFrameMnId();
@@ -79,6 +80,7 @@ public:
     vector<long unsigned int> GetMapPoints();
     int GetParent();
     void Swap(ServerKeyFrame *skf);
+    void Swap(const ORB_SLAM2v2::KF::ConstPtr& msg);
 
     unsigned int mnId;
 
@@ -92,12 +94,19 @@ public:
     cv::Mat Twc;
     cv::Mat Tcw;
     cv::Mat Ow;
+    cv::Mat mK;
+
+    cv::Mat mTcwGBA;
+    cv::Mat mTcwBefGBA;
+    long unsigned int mnBAGlobalForKF;
+
     vector<long unsigned int> CovisibleList;
     int parentId;
     vector<long unsigned int> LoopEdgeList;
 
     cv::Mat mDescriptors;
     DBoW2::FeatureVector mFeatVec;
+    vector<cv::KeyPoint> mvKeys;
     vector<cv::KeyPoint> mvKeysUn;
     vector<long unsigned int> mvpMapPoints;
     vector<float> mvuRight;
@@ -137,6 +146,10 @@ public:
     vector<float> mvScaleFactors;
     vector<float> mvLevelSigma2;
     vector<float> mvInvLevelSigma2;
+    
+    // Calibration parameters
+    float fx, fy, cx, cy, invfx, invfy, mbf, mb, mThDepth;
+    int mnMinX, mnMinY, mnMaxX, mnMaxY;
 };
 
 class ServerMap
@@ -150,6 +163,7 @@ public:
     void EraseKeyFrame(long unsigned int mnId);
     void UpdateMapPoint(ServerMapPoint *smp);
     void UpdateKeyFrame(ServerKeyFrame *skf);
+    void UpdateKeyFrame(const ORB_SLAM2v2::KF::ConstPtr& msg);
     unsigned int GetKeyFrameOrigin();
     void Clear();
     void ConnectToClient();

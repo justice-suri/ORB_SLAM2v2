@@ -15,6 +15,9 @@ public:
     ServerViewer(MapDrawer *pSMapDrawer, const string &strSettingPath);
     ServerViewer(ServerMap *pSMap, ORBParams params, MapDrawer *pSMapDrawer, const string &strSettingPath);
     void Run();
+    void ActivateConnection();
+    void DeactivateConnection();
+    void getServerMap(ServerMap* pSMap);
 
 private:
     MapDrawer* mpSMapDrawer;
@@ -30,6 +33,8 @@ private:
     ros::Publisher map_pub;
     ros::Publisher octomap_pub;
     bool bConnect;
+    bool bConnectRequest;
+    bool bDisconnectRequest;
 };
 
 }
