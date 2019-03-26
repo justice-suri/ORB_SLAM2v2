@@ -33,6 +33,8 @@ public:
     void Run();
     int GetClientId();
 
+    void ActivateConnectionToServer();
+
     queue<KeyFrame*> mvpKF;
     queue<MapPoint*> mvpMP;
     queue<KeyFrame*> mvpUKF;
