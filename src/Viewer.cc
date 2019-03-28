@@ -210,7 +210,7 @@ void Viewer::Run()
                 std::this_thread::sleep_for(std::chrono::microseconds(3000));
             }
         }
-        cout << "CheckFinish() : " << CheckFinish() << endl;
+        //cout << "CheckFinish() : " << CheckFinish() << endl;
         if(CheckFinish())
             break;
     }

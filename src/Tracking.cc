@@ -402,7 +402,7 @@ void Tracking::Track()
     {
         // System is initialized. Track Frame.
         bool bOK;
-        cout << "bOK = " << bOK << endl;
+        cout << "bOK = " << bOK << " mbOnlyTacking = " << mbOnlyTracking << endl;
 
         // Initial camera pose estimation using motion model or relocalization (if tracking is lost)
         if(!mbOnlyTracking)
@@ -438,6 +438,7 @@ void Tracking::Track()
             if(mState==LOST)
             {
                 bOK = Relocalization();
+                cout << "Relocalization done" << endl;
             }
             else
             {
@@ -504,7 +505,6 @@ void Tracking::Track()
         }
 
         mCurrentFrame.mpReferenceKF = mpReferenceKF;
-        cout << "mpReferenceKF : " << mpReferenceKF->mnId << endl;
         // If we have an initial estimation of the camera pose and matching. Track the local map.
         if(!mbOnlyTracking)
         {

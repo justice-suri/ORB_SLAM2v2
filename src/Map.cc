@@ -201,10 +201,15 @@ template<class Archive>
 void Map::serialize(Archive &ar, const unsigned int version)
 {
     // don't save mutex
+    cout << "mspMapPoints" << endl;
     ar & mspMapPoints;
+    cout << "mvpKeyFrameOrigins" << endl;
     ar & mvpKeyFrameOrigins;
+    cout << "mspKeyFrames " << endl;
     ar & mspKeyFrames;
+    cout << "mvpReferenceMapPoints" << endl;
     ar & mvpReferenceMapPoints;
+    cout << "mnMaxKFid" << endl;
     ar & mnMaxKFid & mnBigChangeIdx;
 }
 template void Map::serialize(boost::archive::binary_iarchive&, const unsigned int);

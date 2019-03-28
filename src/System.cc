@@ -25,6 +25,7 @@
 #include <thread>
 #include <pangolin/pangolin.h>
 #include <iomanip>
+#include <time.h>
 
 static bool has_suffix(const std::string &str, const std::string &suffix)
 {
@@ -591,8 +592,8 @@ void System::Shutdown()
     }
     if(mpViewer)
         pangolin::BindToContext("ORB-SLAM2: Map Viewer");
-    if (is_save_map)
-        SaveMap(mapfile);
+    //if (is_save_map)
+    //    SaveMap(mapfile);
 }
 
 void System::SaveTrajectoryTUM(const string &filename)
@@ -876,9 +877,9 @@ bool System::LoadMap(const string &filename)
 
     vector<KeyFrame*> mpKFs = mpMap->GetAllKeyFrames();
     vector<MapPoint*> mpMPs = mpMap->GetAllMapPoints();
-    mpKeyFrameDatabase = new KeyFrameDatabase(mpVocabulary);
     unsigned long mnFrameId = 0;
     unsigned long mnMapPointId = 0;
+    mpKeyFrameDatabase = new KeyFrameDatabase(mpVocabulary);
 
     for(vector<KeyFrame*>::iterator itx = mpKFs.begin(); itx != mpKFs.end(); itx++){
         if(*itx==NULL){
@@ -911,19 +912,7 @@ bool System::LoadMap(const string &filename)
     MapPoint::nNextId = mnMapPointId;
     cout << "[System] mnframeId : " << mnFrameId << endl;
 
-    //mpMap->SetClientId(oldMap->GetClientId());
-    //mpMap->SetNodeHandle(oldMap->GetNodeHandle());
-    
-    mpFrameDrawer->getMap(mpMap);
-    mpMapDrawer->getMap(mpMap);
-    mpTracker->getMap(mpMap);
-    mpLocalMapper->getMap(mpMap);
-    mpLoopCloser->getMap(mpMap);
-    mpTracker->SetKeyFrameDatabase(mpKeyFrameDatabase);
-    mpLoopCloser->SetKeyFrameDatabase(mpKeyFrameDatabase);
-
 /*
-    mpKeyFrameDatabase->SetORBvocabulary(mpVocabulary);
     cout << " ...done" << std::endl;
     cout << "Map Reconstructing" << flush;
     vector<ORB_SLAM2::KeyFrame*> vpKFS = mpMap->GetAllKeyFrames();
@@ -1115,6 +1104,7 @@ void System::RequestServiceLoadMap(string filename){
 
 void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     cout << "New map was received!" << endl;
+    clock_t start = clock();
     stringstream sarray(msg->data);
     Map *oldMap = mpMap;
     KeyFrameDatabase *oldDB = mpKeyFrameDatabase;
@@ -1212,6 +1202,9 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     mbActivateLocalizationMode = false;
     mbReset = false;
     mpSendClassToServer->ActivateConnectionToServer();
+
+
+    cout << (clock() - start)<< endl;
 }
 
 } //namespace ORB_SLAM
