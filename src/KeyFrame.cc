@@ -301,7 +301,8 @@ void KeyFrame::UpdateConnections()
         unique_lock<mutex> lockMPs(mMutexFeatures);
         vpMP = mvpMapPoints;
     }
-    cout << "[KeyFrame] For all map points in keyframe check in which" << endl;
+    if(mbTest)
+        cout << "[KeyFrame] For all map points in keyframe check in which" << endl;
     //For all map points in keyframe check in which other keyframes are they seen
     //Increase counter for those keyframes
     for(vector<MapPoint*>::iterator vit=vpMP.begin(), vend=vpMP.end(); vit!=vend; vit++)
@@ -323,11 +324,13 @@ void KeyFrame::UpdateConnections()
             KFcounter[mit->first]++;
         }
     }
-    cout << "This should not happen" << endl;
+    if(mbTest)
+        cout << "This should not happen" << endl;
     // This should not happen
     if(KFcounter.empty())
         return;
-    cout << "if the counter is greater than threshold" << endl;
+    if(mbTest)
+        cout << "if the counter is greater than threshold" << endl;
     //If the counter is greater than threshold add connection
     //In case no keyframe counter is over threshold add the one with maximum counter
     int nmax=0;
@@ -346,9 +349,11 @@ void KeyFrame::UpdateConnections()
         if(mit->second>=th)
         {
             vPairs.push_back(make_pair(mit->second,mit->first));
-            cout << "Try to add connection" << endl;
+            if(mbTest)
+                cout << "Try to add connection" << endl;
             (mit->first)->AddConnection(this,mit->second);
-            cout << "Done" << endl;
+            if(mbTest)
+                cout << "Done" << endl;
         }
     }
 
@@ -369,7 +374,8 @@ void KeyFrame::UpdateConnections()
 
     {
         unique_lock<mutex> lockCon(mMutexConnections);
-        cout << "mspConnectedKeyFrames " << endl;
+        if(mbTest)
+            cout << "mspConnectedKeyFrames " << endl;
         // mspConnectedKeyFrames = spConnectedKeyFrames;
         mConnectedKeyFrameWeights = KFcounter;
         mvpOrderedConnectedKeyFrames = vector<KeyFrame*>(lKFs.begin(),lKFs.end());
@@ -469,12 +475,13 @@ void KeyFrame::SetBadFlag()
             return;
         }
     }
-    cout << "[KeyFrame] SetBadFlag()" << endl;
+    if(mbTest)
+        cout << "[KeyFrame] SetBadFlag()" << endl;
 
     for(map<KeyFrame*,int>::iterator mit = mConnectedKeyFrameWeights.begin(), mend=mConnectedKeyFrameWeights.end(); mit!=mend; mit++)
         mit->first->EraseConnection(this);
-
-    cout << "[KeyFrame] mvpMapPoints.size : " << mvpMapPoints.size() << endl;
+    if(mbTest)
+        cout << "[KeyFrame] mvpMapPoints.size : " << mvpMapPoints.size() << endl;
     for(size_t i=0; i<mvpMapPoints.size(); i++)
         if(mvpMapPoints[i])
             mvpMapPoints[i]->EraseObservation(this);
@@ -502,7 +509,8 @@ void KeyFrame::SetBadFlag()
             for(set<KeyFrame*>::iterator sit=mspChildrens.begin(), send=mspChildrens.end(); sit!=send; sit++)
             {
                 KeyFrame* pKF = *sit;
-                cout << "[KeyFrame] pKF -> " << pKF->mnId << endl;
+                if(mbTest)
+                    cout << "[KeyFrame] pKF -> " << pKF->mnId << endl;
                 if(pKF->isBad())
                     continue;
 
@@ -536,7 +544,8 @@ void KeyFrame::SetBadFlag()
             else
                 break;
         }
-        cout << "[KeyFrame] mspChildrens.empty : " << mspChildrens.empty() << endl;
+        if(mbTest)
+            cout << "[KeyFrame] mspChildrens.empty : " << mspChildrens.empty() << endl;
 
         // If a children has no covisibility links with any parent candidate, assign to the original parent of this KF
         if(!mspChildrens.empty())
@@ -549,12 +558,14 @@ void KeyFrame::SetBadFlag()
         mTcp = Tcw*mpParent->GetPoseInverse();
         mbBad = true;
     }
-
-    cout << "[KeyFrame] mpMap->EraseKeyFrame(this)" << mnId << endl;
+    if(mbTest)
+        cout << "[KeyFrame] mpMap->EraseKeyFrame(this)" << mnId << endl;
     mpMap->EraseKeyFrame(this);
-    cout << "[KeyFrame] mpKeyFrameDB->erase(this)" << (void*)mpKeyFrameDB << endl;
+    if(mbTest)
+        cout << "[KeyFrame] mpKeyFrameDB->erase(this)" << (void*)mpKeyFrameDB << endl;
     mpKeyFrameDB->erase(this);
-    cout << "[KeyFrame] Done!" << endl;
+    if(mbTest)
+        cout << "[KeyFrame] Done!" << endl;
 }
 
 bool KeyFrame::isBad()
@@ -585,7 +596,8 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
 {
     vector<size_t> vIndices;
     vIndices.reserve(N);
-    cout << "N : " << N << endl;
+    if(mbTest)
+        cout << "N : " << N << endl;
     const int nMinCellX = max(0,(int)floor((x-mnMinX-r)*mfGridElementWidthInv));
     if(nMinCellX>=mnGridCols)
         return vIndices;
@@ -601,7 +613,8 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
     const int nMaxCellY = min((int)mnGridRows-1,(int)ceil((y-mnMinY+r)*mfGridElementHeightInv));
     if(nMaxCellY<0)
         return vIndices;
-    cout << nMinCellX << " " << nMaxCellX << " " << nMinCellY << " " << nMaxCellY << endl;
+    if(mbTest)
+        cout << nMinCellX << " " << nMaxCellX << " " << nMinCellY << " " << nMaxCellY << endl;
     for(int ix = nMinCellX; ix<=nMaxCellX; ix++)
     {
         for(int iy = nMinCellY; iy<=nMaxCellY; iy++)
@@ -609,7 +622,8 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
             const vector<size_t> vCell = mGrid[ix][iy];
             for(size_t j=0, jend=vCell.size(); j<jend; j++)
             {
-                cout << "mvKeysUn : " << mvKeysUn.size() << endl;
+                if(mbTest)
+                    cout << "mvKeysUn : " << mvKeysUn.size() << endl;
                 const cv::KeyPoint &kpUn = mvKeysUn[vCell[j]];
                 const float distx = kpUn.pt.x-x;
                 const float disty = kpUn.pt.y-y;

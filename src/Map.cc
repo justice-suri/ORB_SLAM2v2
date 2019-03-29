@@ -183,13 +183,22 @@ void Map::SetSendClassToServer(SendClassToServer* pSendClassToServer){
 
 void Map::clear()
 {
-    cout << "[Map] Try to clear" << endl;
+    if(mbTest)
+        cout << "[Map] Try to clear" << endl;
     for(set<MapPoint*>::iterator sit=mspMapPoints.begin(), send=mspMapPoints.end(); sit!=send; sit++)
         delete *sit;
-    cout << "[Map] Delete MapPoint" << endl;
-    for(set<KeyFrame*>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++)
+    if(mbTest)
+        cout << "[Map] Delete MapPoint" << endl;
+    int ii = 0;
+    for(set<KeyFrame*>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++){
+        cout << ++ii << "/" << mspKeyFrames.size();
+        cout << " KeyFrame : " << (*sit)->mnId << endl;
         delete *sit;
-    cout << "[Map] Delete KeyFrame" << endl;
+        cout << ii << " deleted!" << endl;
+    }
+//        delete *sit;
+    if(mbTest)
+        cout << "[Map] Delete KeyFrame" << endl;
     mspMapPoints.clear();
     mspKeyFrames.clear();
     mnMaxKFid = 0;
@@ -201,15 +210,20 @@ template<class Archive>
 void Map::serialize(Archive &ar, const unsigned int version)
 {
     // don't save mutex
-    cout << "mspMapPoints" << endl;
+    if(mbTest)
+        cout << "mspMapPoints" << endl;
     ar & mspMapPoints;
-    cout << "mvpKeyFrameOrigins" << endl;
+    if(mbTest)
+        cout << "mvpKeyFrameOrigins" << endl;
     ar & mvpKeyFrameOrigins;
-    cout << "mspKeyFrames " << endl;
+    if(mbTest)
+        cout << "mspKeyFrames " << endl;
     ar & mspKeyFrames;
-    cout << "mvpReferenceMapPoints" << endl;
+    if(mbTest)
+        cout << "mvpReferenceMapPoints" << endl;
     ar & mvpReferenceMapPoints;
-    cout << "mnMaxKFid" << endl;
+    if(mbTest)
+        cout << "mnMaxKFid" << endl;
     ar & mnMaxKFid & mnBigChangeIdx;
 }
 template void Map::serialize(boost::archive::binary_iarchive&, const unsigned int);

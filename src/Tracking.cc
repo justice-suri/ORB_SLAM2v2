@@ -314,6 +314,8 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
 
 cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp)
 {
+    if(mbTest)
+        cout << "[Tracking] GrapImageRGBD start" << endl;
     mImGray = imRGB;
     mImRGB = imRGB;
     mImDepth = imD;
@@ -339,6 +341,8 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
     mCurrentFrame = Frame(mImGray,mImDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
+    if(mbTest)
+        cout << "[Tracking] GrabImageRGBD finish!" << endl;
 
     return mCurrentFrame.mTcw.clone();
 }
@@ -375,7 +379,8 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 
 void Tracking::Track()
 {
-    cout << "[Tracking]Start!" << endl;
+    if(mbTest)
+        cout << "[Tracking]Start!" << endl;
     if(mState==NO_IMAGES_YET)
     {
         mState = NOT_INITIALIZED;
@@ -402,7 +407,8 @@ void Tracking::Track()
     {
         // System is initialized. Track Frame.
         bool bOK;
-        cout << "bOK = " << bOK << " mbOnlyTacking = " << mbOnlyTracking << endl;
+        if(mbTest)
+            cout << "bOK = " << bOK << " mbOnlyTacking = " << mbOnlyTracking << endl;
 
         // Initial camera pose estimation using motion model or relocalization (if tracking is lost)
         if(!mbOnlyTracking)
@@ -438,7 +444,8 @@ void Tracking::Track()
             if(mState==LOST)
             {
                 bOK = Relocalization();
-                cout << "Relocalization done" << endl;
+                if(mbTest)
+                    cout << "Relocalization done" << endl;
             }
             else
             {
@@ -627,7 +634,8 @@ void Tracking::Track()
             mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
         mLastFrame = Frame(mCurrentFrame);
-        cout << "[Tracking] Finish!" << endl;
+        if(mbTest)
+            cout << "[Tracking] Finish!" << endl;
     }
 
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
@@ -648,7 +656,8 @@ void Tracking::Track()
         mlFrameTimes.push_back(mlFrameTimes.back());
         mlbLost.push_back(mState==LOST);
     }
-    cout << "[Tracking] This can happen if tracking is lost" << endl;
+    if(mbTest)
+        cout << "[Tracking] This can happen if tracking is lost" << endl;
 }
 
 
@@ -1647,7 +1656,8 @@ void Tracking::Reset()
         mpViewer->RequestStop();
         while(!mpViewer->isStopped())
         {
-            cout << "[Tracking]: " << mpViewer->isStopped() << endl;
+            if(mbTest)
+                cout << "[Tracking]: " << mpViewer->isStopped() << endl;
             std::this_thread::sleep_for(std::chrono::microseconds(3000));
         }
     }

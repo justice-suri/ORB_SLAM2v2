@@ -122,6 +122,7 @@ protected:
     bool mbStopped;
     bool mbStopRequested;
     bool mbNotStop;
+    bool mbTest = true;
     std::mutex mMutexStop;
 
     bool mbAcceptKeyFrames;

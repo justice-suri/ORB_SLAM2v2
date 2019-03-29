@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <queue>
+#include <iostream>
 
 namespace g2o {
 
@@ -98,13 +99,19 @@ namespace g2o {
 
   bool HyperGraph::addEdge(Edge* e)
   {
+    //std::cout << "HyperGraph::addEdge" << std::endl;
     std::pair<EdgeSet::iterator, bool> result = _edges.insert(e);
+    //std::cout << (result.second) << std::endl;
     if (! result.second)
       return false;
     for (std::vector<Vertex*>::iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
+      //std::cout << "Vertex size : " << e->vertices().size() << std::endl;
+      //std::cout << (*it) << std::endl;
+      //std::cout << "Vertex : " << (*it)->id() << std::endl;
       Vertex* v = *it;
       v->edges().insert(e);
     }
+    //std::cout << "HyperGraph::addEdge Finish!" << std::endl;
     return true;
   }
 

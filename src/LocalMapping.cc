@@ -64,19 +64,24 @@ void LocalMapping::Run()
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
-            cout << "[LocalMapping]CheckNewKeyFrames" << endl;
+            if(mbTest)
+                cout << "[LocalMapping]CheckNewKeyFrames" << endl;
             // BoW conversion and insertion in Map
             ProcessNewKeyFrame();
-            cout << "[LocalMapping]ProcessNewKeyFrame" << endl;
+            if(mbTest)
+                cout << "[LocalMapping]ProcessNewKeyFrame" << endl;
             // Check recent MapPoints
             MapPointCulling();
-            cout << "[LocalMapping]MapPointCulling" << endl;
+            if(mbTest)
+                cout << "[LocalMapping]MapPointCulling" << endl;
             // Triangulate new MapPoints
             CreateNewMapPoints();
-            cout << "[LocalMapping]CreateNewMapPoints" << endl;
+            if(mbTest)
+                cout << "[LocalMapping]CreateNewMapPoints" << endl;
             if(!CheckNewKeyFrames())
             {
-                cout << "[LocalMapping]CheckNewKeyFrames" << endl;
+                if(mbTest)
+                    cout << "[LocalMapping]CheckNewKeyFrames" << endl;
                 // Find more matches in neighbor keyframes and fuse point duplications
                 SearchInNeighbors();
             }
@@ -85,16 +90,19 @@ void LocalMapping::Run()
 
             if(!CheckNewKeyFrames() && !stopRequested())
             {
-                cout << "[LocalMapping] Local BA " << mpMap->KeyFramesInMap() << endl;
+                if(mbTest)
+                    cout << "[LocalMapping] Local BA " << mpMap->KeyFramesInMap() << endl;
                 // Local BA
                 if(mpMap->KeyFramesInMap()>2)
                     Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
 
                 // Check redundant local Keyframes
-                cout << "[LocalMapping]KeyFrameCulling" << endl;
+                if(mbTest)
+                    cout << "[LocalMapping]KeyFrameCulling" << endl;
                 KeyFrameCulling();
             }
-            cout << "[LocalMapping] Finish!" << endl;
+            if(mbTest)
+                cout << "[LocalMapping] Finish!" << endl;
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
         }
         else if(Stop())
@@ -146,27 +154,31 @@ void LocalMapping::ProcessNewKeyFrame()
 
     // Compute Bags of Words structures
     mpCurrentKeyFrame->ComputeBoW();
-
-    cout << "[LocalMapping] Associate MapPoints to the new keyframe and update normal and descriptor" << endl;
+    if(mbTest)
+        cout << "[LocalMapping] Associate MapPoints to the new keyframe and update normal and descriptor" << endl;
     // Associate MapPoints to the new keyframe and update normal and descriptor
     const vector<MapPoint*> vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
 
     for(size_t i=0; i<vpMapPointMatches.size(); i++)
     {
-        cout << "[LocalMapping] vpMapPointMatches size : " << vpMapPointMatches.size() << " i : " << i << endl;
+        if(mbTest)
+            cout << "[LocalMapping] vpMapPointMatches size : " << vpMapPointMatches.size() << " i : " << i << endl;
         MapPoint* pMP = vpMapPointMatches[i];
         if(pMP)
         {
             if(!pMP->isBad())
             {
-                cout << "[LocalMapping] IsInKeyFrame " << mpCurrentKeyFrame->mnId << endl;
+                if(mbTest)
+                    cout << "[LocalMapping] IsInKeyFrame " << mpCurrentKeyFrame->mnId << endl;
                 if(!pMP->IsInKeyFrame(mpCurrentKeyFrame))
                 {
                     pMP->AddObservation(mpCurrentKeyFrame, i);
                     pMP->UpdateNormalAndDepth();
-                    cout << "[LocalMapping] ComputeDistinctiveDescriptors " << endl;
+                    if(mbTest)
+                        cout << "[LocalMapping] ComputeDistinctiveDescriptors " << endl;
                     pMP->ComputeDistinctiveDescriptors();
-                    cout << "[LocalMapping] UpdateMapPoint" << endl;
+                    if(mbTest)
+                        cout << "[LocalMapping] UpdateMapPoint" << endl;
                     mpMap->UpdateMapPoint(pMP);
                 }
                 else // this can only happen for new stereo points inserted by the Tracking
@@ -176,12 +188,12 @@ void LocalMapping::ProcessNewKeyFrame()
             }
         }
     }    
-
-    cout << "[LocalMapping] Update links in the Covisibility Graph" << endl;
+    if(mbTest)
+        cout << "[LocalMapping] Update links in the Covisibility Graph" << endl;
     // Update links in the Covisibility Graph
     mpCurrentKeyFrame->UpdateConnections();
-
-    cout << "[LocalMapping] Insert Keyframe in Map" << endl;
+    if(mbTest)
+        cout << "[LocalMapping] Insert Keyframe in Map" << endl;
     // Insert Keyframe in Map
     mpMap->AddKeyFrame(mpCurrentKeyFrame);
 }
@@ -660,9 +672,6 @@ void LocalMapping::KeyFrameCulling()
     for(vector<KeyFrame*>::iterator vit=vpLocalKeyFrames.begin(), vend=vpLocalKeyFrames.end(); vit!=vend; vit++)
     {
         KeyFrame* pKF = *vit;
-        if(!pKF)
-            cout << "[LocalMapping] pKF : NULL " << endl;
-        cout << "[LocalMapping] pKF : " << pKF->mnId << endl;
         if(pKF->mnId==0)
             continue;
         const vector<MapPoint*> vpMapPoints = pKF->GetMapPointMatches();
@@ -712,8 +721,10 @@ void LocalMapping::KeyFrameCulling()
                 }
             }
         }  
-        cout << "[LocalMapping] nRedundantObservations : " << nRedundantObservations << endl;
-        cout << "[LocalMapping] mpMap : " << (void*)mpMap << endl;
+        if(mbTest){
+            cout << "[LocalMapping] nRedundantObservations : " << nRedundantObservations << endl;
+            cout << "[LocalMapping] mpMap : " << (void*)mpMap << endl;
+        }
 
         if(nRedundantObservations>0.9*nMPs)
             pKF->SetBadFlag();

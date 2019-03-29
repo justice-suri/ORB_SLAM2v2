@@ -74,11 +74,13 @@ void LoopClosing::Run()
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
-            cout << "[LoopClosing]Start for LoopClosing" << endl;
+            if(mbTest)
+                cout << "[LoopClosing]Start for LoopClosing" << endl;
             // Detect loop candidates and check covisibility consistency
             if(DetectLoop())
             {
-                cout << "[LocalClosing]DetectLoop" << endl;
+                if(mbTest)
+                    cout << "[LocalClosing]DetectLoop" << endl;
                // Compute similarity transformation [sR|t]
                // In the stereo/RGBD case s=1
                if(ComputeSim3())
@@ -87,7 +89,8 @@ void LoopClosing::Run()
                    CorrectLoop();
                }
             }
-            cout << "[LoopClosing]Done" << endl;
+            if(mbTest)
+                cout << "[LoopClosing]Done" << endl;
         }
 
         ResetIfRequested();
@@ -649,11 +652,13 @@ void LoopClosing::ResetIfRequested()
     unique_lock<mutex> lock(mMutexReset);
     if(mbResetRequested)
     {
-        cout << "[LoopCloing] ResetIfRequested" << endl;
+        if(mbTest)
+            cout << "[LoopCloing] ResetIfRequested" << endl;
         mlpLoopKeyFrameQueue.clear();
         mLastLoopKFid=0;
         mbResetRequested=false;
-        cout << "[LoopClosing] ResetIfRequested Done!" << endl;
+        if(mbTest)
+            cout << "[LoopClosing] ResetIfRequested Done!" << endl;
         std::this_thread::sleep_for(std::chrono::microseconds(5000));
     }
 }

@@ -260,7 +260,8 @@ float MapPoint::GetFoundRatio()
 
 void MapPoint::ComputeDistinctiveDescriptors()
 {
-    cout << "[MapPoint] Retrieve all observed descriptors" << endl;
+    if(mbTest)
+        cout << "[MapPoint] Retrieve all observed descriptors" << endl;
     // Retrieve all observed descriptors
     vector<cv::Mat> vDescriptors;
 
@@ -281,14 +282,16 @@ void MapPoint::ComputeDistinctiveDescriptors()
     for(map<KeyFrame*,size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
     {
         KeyFrame* pKF = mit->first;
-        cout << "[MapPoint] pKF = " << pKF->mnId << " mDescriptors.rows = " << pKF->mDescriptors.rows << " size_t = " << mit->second << endl;
+        if(mbTest)
+            cout << "[MapPoint] pKF = " << pKF->mnId << " mDescriptors.rows = " << pKF->mDescriptors.rows << " size_t = " << mit->second << endl;
         if(!pKF->isBad())
             vDescriptors.push_back(pKF->mDescriptors.row(mit->second));
     }
 
     if(vDescriptors.empty())
         return;
-    cout << "Compute distances between them" << endl;
+    if(mbTest)
+        cout << "Compute distances between them" << endl;
     // Compute distances between them
     const size_t N = vDescriptors.size();
 
@@ -303,7 +306,8 @@ void MapPoint::ComputeDistinctiveDescriptors()
             Distances[j][i]=distij;
         }
     }
-    cout << "Take the descriptor with least median distance to the rest" << endl;
+    if(mbTest)
+        cout << "Take the descriptor with least median distance to the rest" << endl;
     // Take the descriptor with least median distance to the rest
     int BestMedian = INT_MAX;
     int BestIdx = 0;
@@ -363,6 +367,7 @@ void MapPoint::UpdateNormalAndDepth()
     }
     if(mpRefKF == NULL){
         for(map<KeyFrame*,size_t>::iterator mit = observations.begin(), mend = observations.end(); mit!=mend; mit++){
+            if(mbTest){
             if(mit->first == NULL){
                 cout << "[mpRefKF = NULL]: observations : NULL" << endl;
                 cout << "UID : " << UID << endl;
@@ -374,6 +379,7 @@ void MapPoint::UpdateNormalAndDepth()
                 cout << "UID : " << UID << endl;
                 cout << "nNextId : " << nNextId << endl;
                 cout << "isBad : " << mbBad << endl;
+            }
             }
             
         }
@@ -492,6 +498,7 @@ template<class Archive>
 void MapPoint::serialize(Archive &ar, const unsigned int version)
 {
     ar & UID & mnId & nNextId & mnFirstKFid & mnFirstFrame & nObs;
+    cout << "Tracking related vars" << endl;
     // Tracking related vars
     ar & mTrackProjX;
     ar & mTrackProjY;
@@ -501,9 +508,15 @@ void MapPoint::serialize(Archive &ar, const unsigned int version)
     ar & mTrackViewCos;
     ar & mnTrackReferenceForFrame;
     ar & mnLastFrameSeen;
+    if(mbTest)
+        cout << "Local Mapping related vars" << endl;
     // Local Mapping related vars
     ar & mnBALocalForKF & mnFuseCandidateForKF;
+    if(mbTest)
+        cout << "LoopClising related vars" << endl;
     // Loop Closing related vars
+    if(mbTest)
+        cout << "don't save the mutex" << endl;
     ar & mnLoopPointForKF & mnCorrectedByKF & mnCorrectedReference & mPosGBA & mnBAGlobalForKF;
     // don't save the mutex
     ar & mWorldPos;

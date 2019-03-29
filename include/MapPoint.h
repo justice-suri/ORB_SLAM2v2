@@ -157,6 +157,8 @@ protected:
      bool mbBad;
      MapPoint* mpReplaced;
 
+     bool mbTest = false;
+
      // Scale invariance distances
      float mfMinDistance;
      float mfMaxDistance;

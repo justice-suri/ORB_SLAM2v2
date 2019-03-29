@@ -99,6 +99,7 @@ protected:
 
     float mfNNratio;
     bool mbCheckOrientation;
+    bool mbTest = false;
 };
 
 }// namespace ORB_SLAM

@@ -263,11 +263,13 @@ namespace g2o {
 
   bool OptimizableGraph::addEdge(HyperGraph::Edge* e_)
   {
+    //cout << "OptimizableGraph::addEdge" << endl;
     OptimizableGraph::Edge* e = dynamic_cast<OptimizableGraph::Edge*>(e_);
     assert(e && "Edge does not inherit from OptimizableGraph::Edge");
     if (! e)
       return false;
     bool eresult = HyperGraph::addEdge(e);
+    //cout << "eresult : " << eresult << endl;
     if (! eresult)
       return false;
     e->_internalId = _nextEdgeId++;
