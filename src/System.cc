@@ -907,9 +907,9 @@ bool System::LoadMap(const string &filename)
             mnMapPointId = (*itx)->UID;
     }
     cout << "[System] MapPoint Complete!" << endl;
-    Frame::nNextId = mnFrameId;
-    KeyFrame::nNextId = mnFrameId;
-    MapPoint::nNextId = mnMapPointId;
+    Frame::nNextId = ++mnFrameId;
+    KeyFrame::nNextId = ++mnFrameId;
+    MapPoint::nNextId = ++mnMapPointId;
     cout << "[System] mnframeId : " << mnFrameId << endl;
 
 /*
@@ -950,7 +950,8 @@ bool System::LoadMap(){
     mpLoopCloser->ReadyForMemoryConnect = true;
     mpLocalMapper->ReadyForMemoryConnect = true;
     while(!(mpLoopCloser->WaitForMemoryConnect&&mpLocalMapper->WaitForMemoryConnect)){
-        std::this_thread::sleep_for(std::chrono::microseconds(2000));
+        std::this_thread::sleep_for(std::chrono::microseconds(200000));
+        cout << "[System] LoadMap : " << mpLoopCloser->WaitForMemoryConnect << " " << mpLocalMapper->WaitForMemoryConnect << endl;
     }
 
     
@@ -993,9 +994,9 @@ bool System::LoadMap(){
             mnMapPointId = (*itx)->UID;
     }
     cout << "[System] MapPoint Complete!" << endl;
-    Frame::nNextId = mnFrameId;
-    KeyFrame::nNextId = mnFrameId;
-    MapPoint::nNextId = mnMapPointId;
+    Frame::nNextId = ++mnFrameId;
+    KeyFrame::nNextId = ++mnFrameId;
+    MapPoint::nNextId = ++mnMapPointId;
     cout << "[System] mnframeId : " << mnFrameId << endl;
 
     mpMap->SetClientId(oldMap->GetClientId());
@@ -1124,7 +1125,6 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     mpLoopCloser->ReadyForMemoryConnect = true;
     mpLocalMapper->ReadyForMemoryConnect = true;
     while(!(mpLoopCloser->WaitForMemoryConnect&&mpLocalMapper->WaitForMemoryConnect)){
-        //mpLocalMapper->Release();
         cout << mpLoopCloser->WaitForMemoryConnect<< " " << mpLocalMapper->WaitForMemoryConnect << endl;
         std::this_thread::sleep_for(std::chrono::microseconds(2000));
     }
@@ -1170,9 +1170,9 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
             mnMapPointId = (*itx)->UID;
     }
     cout << "[System] MapPoint Complete!" << endl;
-    Frame::nNextId = mnFrameId;
-    KeyFrame::nNextId = mnFrameId;
-    MapPoint::nNextId = mnMapPointId;
+    Frame::nNextId = ++mnFrameId;
+    KeyFrame::nNextId = ++mnFrameId;
+    MapPoint::nNextId = ++mnMapPointId;
     cout << "[System] mnframeId : " << mnFrameId << endl;
 
     mpMap->SetClientId(oldMap->GetClientId());

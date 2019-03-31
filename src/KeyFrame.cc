@@ -128,6 +128,9 @@ void KeyFrame::AddConnection(KeyFrame *pKF, const int &weight)
 {
     {
         unique_lock<mutex> lock(mMutexConnections);
+        if(mbTest)
+            cout << "[KeyFrame] mConnectedKeyFrameWeight : " << endl;
+            cout << mConnectedKeyFrameWeights.size() << endl;
         if(!mConnectedKeyFrameWeights.count(pKF))
             mConnectedKeyFrameWeights[pKF]=weight;
         else if(mConnectedKeyFrameWeights[pKF]!=weight)
@@ -137,6 +140,8 @@ void KeyFrame::AddConnection(KeyFrame *pKF, const int &weight)
     }
 
     UpdateBestCovisibles();
+    if(mbTest)
+        cout << "[KeyFrame] AddConnection UpdateKeyFrame " << (void*)mpMap << endl;
     mpMap->UpdateKeyFrame(pKF);
 }
 
@@ -350,7 +355,7 @@ void KeyFrame::UpdateConnections()
         {
             vPairs.push_back(make_pair(mit->second,mit->first));
             if(mbTest)
-                cout << "Try to add connection" << endl;
+                cout << "Try to add connection " << (void*)mpMap << endl;
             (mit->first)->AddConnection(this,mit->second);
             if(mbTest)
                 cout << "Done" << endl;
@@ -596,8 +601,6 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
 {
     vector<size_t> vIndices;
     vIndices.reserve(N);
-    if(mbTest)
-        cout << "N : " << N << endl;
     const int nMinCellX = max(0,(int)floor((x-mnMinX-r)*mfGridElementWidthInv));
     if(nMinCellX>=mnGridCols)
         return vIndices;
@@ -613,8 +616,6 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
     const int nMaxCellY = min((int)mnGridRows-1,(int)ceil((y-mnMinY+r)*mfGridElementHeightInv));
     if(nMaxCellY<0)
         return vIndices;
-    if(mbTest)
-        cout << nMinCellX << " " << nMaxCellX << " " << nMinCellY << " " << nMaxCellY << endl;
     for(int ix = nMinCellX; ix<=nMaxCellX; ix++)
     {
         for(int iy = nMinCellY; iy<=nMaxCellY; iy++)
@@ -622,8 +623,6 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
             const vector<size_t> vCell = mGrid[ix][iy];
             for(size_t j=0, jend=vCell.size(); j<jend; j++)
             {
-                if(mbTest)
-                    cout << "mvKeysUn : " << mvKeysUn.size() << endl;
                 const cv::KeyPoint &kpUn = mvKeysUn[vCell[j]];
                 const float distx = kpUn.pt.x-x;
                 const float disty = kpUn.pt.y-y;

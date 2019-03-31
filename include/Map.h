@@ -86,7 +86,7 @@ public:
     std::mutex mMutexPointCreation;
     std::mutex mMutexStreamThread;
 
-    bool mbTest = false;
+    bool mbTest = true;
 private:
     // serialize is recommended to be private
     friend class boost::serialization::access;

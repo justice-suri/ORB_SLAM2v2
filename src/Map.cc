@@ -91,6 +91,7 @@ void Map::EraseKeyFrame(KeyFrame *pKF)
 
 void Map::UpdateKeyFrame(KeyFrame *pKF){
     unique_lock<mutex> lock(mMutexMap);
+    cout << "[Map] UpdateKeyFrame" << endl;
     if(mpSendClassToServer != NULL)
         mpSendClassToServer->UpdateKeyFrame(pKF);
 }
@@ -183,22 +184,10 @@ void Map::SetSendClassToServer(SendClassToServer* pSendClassToServer){
 
 void Map::clear()
 {
-    if(mbTest)
-        cout << "[Map] Try to clear" << endl;
     for(set<MapPoint*>::iterator sit=mspMapPoints.begin(), send=mspMapPoints.end(); sit!=send; sit++)
         delete *sit;
-    if(mbTest)
-        cout << "[Map] Delete MapPoint" << endl;
-    int ii = 0;
-    for(set<KeyFrame*>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++){
-        cout << ++ii << "/" << mspKeyFrames.size();
-        cout << " KeyFrame : " << (*sit)->mnId << endl;
+    for(set<KeyFrame*>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++)
         delete *sit;
-        cout << ii << " deleted!" << endl;
-    }
-//        delete *sit;
-    if(mbTest)
-        cout << "[Map] Delete KeyFrame" << endl;
     mspMapPoints.clear();
     mspKeyFrames.clear();
     mnMaxKFid = 0;

@@ -204,10 +204,10 @@ void Viewer::Run()
 
         if(Stop())
         {
-            cout << "[Viewer] Wait for stop" << endl;
+
             while(isStopped())
             {
-                std::this_thread::sleep_for(std::chrono::microseconds(3000));
+                std::this_thread::sleep_for(std::chrono::microseconds(30000));
             }
         }
         //cout << "CheckFinish() : " << CheckFinish() << endl;

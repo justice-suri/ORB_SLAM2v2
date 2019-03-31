@@ -106,9 +106,8 @@ namespace g2o {
       return false;
     for (std::vector<Vertex*>::iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
       //std::cout << "Vertex size : " << e->vertices().size() << std::endl;
-      //std::cout << (*it) << std::endl;
-      //std::cout << "Vertex : " << (*it)->id() << std::endl;
       Vertex* v = *it;
+      //std::cout << "Vertex : " << (void*)v << std::endl;
       v->edges().insert(e);
     }
     //std::cout << "HyperGraph::addEdge Finish!" << std::endl;

@@ -240,7 +240,7 @@ protected:
     bool mbNotErase;
     bool mbToBeErased;
     bool mbBad;    
-    bool mbTest = false;
+    bool mbTest = true;
 
     float mHalfBaseline; // Only for visualization
 

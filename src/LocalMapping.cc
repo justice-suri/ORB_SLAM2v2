@@ -111,6 +111,12 @@ void LocalMapping::Run()
             while(isStopped() && !CheckFinish())
             {
                 std::this_thread::sleep_for(std::chrono::microseconds(3000));
+                if(ReadyForMemoryConnect){
+                    mbStopped = false;
+                    mbStopRequested = false;
+                }
+                if(mbTest)
+                    cout << "[LocalMapping] isStopped : " << isStopped() << " CheckFinish : " << CheckFinish() << endl;
             }
             if(CheckFinish())
                 break;
