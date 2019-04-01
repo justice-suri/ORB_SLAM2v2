@@ -23,6 +23,7 @@ void SendClassToServer::SetPublisher(ros::Publisher _data_pub){
 }
 
 void SendClassToServer::SetKeyFrame(KeyFrame *_pKF){
+    unique_lock<mutex> lock(mMutexKeyFrame);
     mvpKF.push(_pKF);
 }
 
@@ -31,6 +32,7 @@ void SendClassToServer::SetMapPoint(MapPoint *_pMP){
 }
 
 void SendClassToServer::EraseKeyFrame(KeyFrame *_pKF){
+    unique_lock<mutex> lock(mMutexKeyFrame);
     mvpDKF.push(_pKF);
 }
 
@@ -39,15 +41,30 @@ void SendClassToServer::EraseMapPoint(MapPoint *_pMP){
 }
 
 void SendClassToServer::UpdateKeyFrame(KeyFrame *_pKF){
+    unique_lock<mutex> lock(mMutexKeyFrame);
     mvpUKF.push(_pKF);
 }
 
 void SendClassToServer::UpdateMapPoint(MapPoint *_pMP){
+    unique_lock<mutex> lock(mMutexKeyFrame);
     mvpUMP.push(_pMP);
 }
 
 
 void SendClassToServer::RunKeyFrame(int command){
+    cout << "[StreamThread] command : " << command << " mbStop : " << mbStop << endl;
+    if(mbStop){
+        unique_lock<mutex> lock(mMutexKeyFrame);
+        queue<KeyFrame*> empty0;
+        queue<KeyFrame*> empty1;
+        queue<KeyFrame*> empty2;
+        swap(mvpKF, empty0);
+        swap(mvpDKF, empty1);
+        swap(mvpUKF, empty2);
+        return;
+    }
+
+    cout << "[StreamThread] RunKeyFrame" << endl;
     ORB_SLAM2v2::KF msg;
 
     vector<long unsigned int> cl;
@@ -171,6 +188,7 @@ void SendClassToServer::RunKeyFrame(int command){
         msg.mDescriptors = sarray.str();
     }
     kf_data_pub.publish(msg);
+    cout << "[StreamThread] Done!" << endl;
 }
 
 void SendClassToServer::RunMapPoint(int command){
@@ -338,6 +356,18 @@ bool SendClassToServer::isFinished()
 {
     unique_lock<mutex> lock(mMutexFinish);
     return mbFinished;
+}
+
+void SendClassToServer::RequestStop()
+{
+    unique_lock<mutex> lock(mMutexFinish);
+    mbStop = true;
+}
+
+void SendClassToServer::Release()
+{
+    unique_lock<mutex> lock(mMutexFinish);
+    mbStop = false;
 }
 
 

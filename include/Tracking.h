@@ -230,7 +230,7 @@ protected:
 
     //Color order (true RGB, false BGR, ignored if grayscale)
     bool mbRGB;
-    bool mbTest = true;
+    bool mbTest = false;
 
     list<MapPoint*> mlpTemporalPoints;
     shared_ptr<PointCloudMapping>  mpPointCloudMapping;//PCL

@@ -46,6 +46,7 @@ class KeyFrame
 public:
 
     KeyFrame(Frame &F, Map* pMap, KeyFrameDatabase* pKFDB);
+    //~KeyFrame(){cout<< "parentKF : " << mvpMapPoints.size() << endl;}
 
     // Pose functions
     void SetPose(const cv::Mat &Tcw);
@@ -240,7 +241,7 @@ protected:
     bool mbNotErase;
     bool mbToBeErased;
     bool mbBad;    
-    bool mbTest = true;
+    bool mbTest = false;
 
     float mHalfBaseline; // Only for visualization
 

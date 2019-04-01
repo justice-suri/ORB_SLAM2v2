@@ -319,7 +319,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
     mImGray = imRGB;
     mImRGB = imRGB;
     mImDepth = imD;
-    cout << "1" << endl;
+    cout << "11" << endl;
     if(mImGray.channels()==3)
     {
         if(mbRGB)
@@ -334,10 +334,10 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
         else
             cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
     }
-    cout << "2" << endl;
+    cout << "22" << endl;
     if((fabs(mDepthMapFactor-1.0f)>1e-5) || mImDepth.type()!=CV_32F)
         mImDepth.convertTo(mImDepth,CV_32F,mDepthMapFactor);
-    cout << "3" << endl;
+    cout << "33" << endl;
     mCurrentFrame = Frame(mImGray,mImDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();

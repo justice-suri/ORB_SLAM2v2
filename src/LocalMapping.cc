@@ -110,8 +110,8 @@ void LocalMapping::Run()
             // Safe area to stop
             while(isStopped() && !CheckFinish())
             {
-                std::this_thread::sleep_for(std::chrono::microseconds(3000));
-                if(ReadyForMemoryConnect){
+                std::this_thread::sleep_for(std::chrono::microseconds(300000));
+                if(ReadyForMemoryConnect || mbResetRequested){
                     mbStopped = false;
                     mbStopRequested = false;
                 }
@@ -195,7 +195,7 @@ void LocalMapping::ProcessNewKeyFrame()
         }
     }    
     if(mbTest)
-        cout << "[LocalMapping] Update links in the Covisibility Graph" << endl;
+        cout << "[LocalMapping] Update links in the Covisibility Graph " << (void*)mpMap << endl;
     // Update links in the Covisibility Graph
     mpCurrentKeyFrame->UpdateConnections();
     if(mbTest)

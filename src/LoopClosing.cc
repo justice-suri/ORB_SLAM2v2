@@ -63,7 +63,9 @@ void LoopClosing::Run()
         if(ReadyForMemoryConnect){
             if(mpThreadGBA){
                 cout << "mpThreadGBA" << endl;
-                mpThreadGBA->join();            
+                cout << (void*)mpThreadGBA << endl;
+                mpThreadGBA->join();
+                cout << "mpTreadGBA done!" << endl;
             }
             WaitForMemoryConnect = true;
             while(WaitForMemoryConnect){
@@ -436,6 +438,7 @@ void LoopClosing::CorrectLoop()
         {
             mpThreadGBA->detach();
             delete mpThreadGBA;
+            cout << "delete mpThread GBA " << (void*)mpThreadGBA << endl;
         }
     }
 

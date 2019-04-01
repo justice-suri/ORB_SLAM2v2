@@ -459,8 +459,10 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
         unique_lock<mutex> lock(mMutexReset);
         if(mbReset)
         {
+            mpSendClassToServer->RequestStop();
             mpTracker->Reset();
             mbReset = false;
+            mpSendClassToServer->Release();
         }
     }
 

@@ -356,6 +356,7 @@ void KeyFrame::UpdateConnections()
             vPairs.push_back(make_pair(mit->second,mit->first));
             if(mbTest)
                 cout << "Try to add connection " << (void*)mpMap << endl;
+            (mit->first)->SetMap(mpMap);
             (mit->first)->AddConnection(this,mit->second);
             if(mbTest)
                 cout << "Done" << endl;

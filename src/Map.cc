@@ -186,8 +186,13 @@ void Map::clear()
 {
     for(set<MapPoint*>::iterator sit=mspMapPoints.begin(), send=mspMapPoints.end(); sit!=send; sit++)
         delete *sit;
-    for(set<KeyFrame*>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++)
+    for(set<KeyFrame*>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++){
+        //cout << "mnId : " << (*sit)->mnId << endl;
         delete *sit;
+        //cout << "Deleted!" << endl;
+    }
+        //delete *sit;
+    //cout << "KeyFrame Erased!" << endl;
     mspMapPoints.clear();
     mspKeyFrames.clear();
     mnMaxKFid = 0;

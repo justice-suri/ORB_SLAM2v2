@@ -44,6 +44,8 @@ public:
 
     void RequestFinish();
     bool isFinished();
+    void RequestStop();
+    void Release();
 
 private:
     KeyFrame *pKF;
@@ -59,7 +61,9 @@ private:
     void SetFinish();
     bool mbFinishRequested;
     bool mbFinished;
+    bool mbStop;
     std::mutex mMutexFinish;
+    std::mutex mMutexKeyFrame;
 
     int ClientId;
 };
