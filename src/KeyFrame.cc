@@ -128,9 +128,10 @@ void KeyFrame::AddConnection(KeyFrame *pKF, const int &weight)
 {
     {
         unique_lock<mutex> lock(mMutexConnections);
-        if(mbTest)
+        if(mbTest){
             cout << "[KeyFrame] mConnectedKeyFrameWeight : " << endl;
             cout << mConnectedKeyFrameWeights.size() << endl;
+        }
         if(!mConnectedKeyFrameWeights.count(pKF))
             mConnectedKeyFrameWeights[pKF]=weight;
         else if(mConnectedKeyFrameWeights[pKF]!=weight)

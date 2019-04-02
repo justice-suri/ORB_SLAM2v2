@@ -1155,6 +1155,7 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
         (*itx)->ComputeBoW();
         mpKeyFrameDatabase->add(*itx);
         (*itx)->SetKeyFrameDatabase(mpKeyFrameDatabase);
+        (*itx)->UpdateConnections();
         if( (*itx)->mnId > mnFrameId)
             mnFrameId = (*itx)->mnId;
     }

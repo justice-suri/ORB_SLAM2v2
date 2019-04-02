@@ -283,7 +283,6 @@ void PointCloudMapping::saveOctomap()
         // Insert the point of Point Cloud to octomap
         tree.updateNode( octomap::point3d(p.x, p.y, p.z), true );
     }
-    cout << "4" << endl;
     // update octomap
     tree.updateInnerOccupancy();
     // save octomap

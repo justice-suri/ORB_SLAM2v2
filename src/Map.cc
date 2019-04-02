@@ -91,7 +91,8 @@ void Map::EraseKeyFrame(KeyFrame *pKF)
 
 void Map::UpdateKeyFrame(KeyFrame *pKF){
     unique_lock<mutex> lock(mMutexMap);
-    cout << "[Map] UpdateKeyFrame" << endl;
+    if(mbTest)
+        cout << "[Map] UpdateKeyFrame" << endl;
     if(mpSendClassToServer != NULL)
         mpSendClassToServer->UpdateKeyFrame(pKF);
 }

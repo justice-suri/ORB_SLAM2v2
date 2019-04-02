@@ -52,7 +52,6 @@ void SendClassToServer::UpdateMapPoint(MapPoint *_pMP){
 
 
 void SendClassToServer::RunKeyFrame(int command){
-    cout << "[StreamThread] command : " << command << " mbStop : " << mbStop << endl;
     if(mbStop){
         unique_lock<mutex> lock(mMutexKeyFrame);
         queue<KeyFrame*> empty0;
@@ -64,7 +63,6 @@ void SendClassToServer::RunKeyFrame(int command){
         return;
     }
 
-    cout << "[StreamThread] RunKeyFrame" << endl;
     ORB_SLAM2v2::KF msg;
 
     vector<long unsigned int> cl;
@@ -188,7 +186,6 @@ void SendClassToServer::RunKeyFrame(int command){
         msg.mDescriptors = sarray.str();
     }
     kf_data_pub.publish(msg);
-    cout << "[StreamThread] Done!" << endl;
 }
 
 void SendClassToServer::RunMapPoint(int command){
