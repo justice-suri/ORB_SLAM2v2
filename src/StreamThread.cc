@@ -57,9 +57,9 @@ void SendClassToServer::RunKeyFrame(int command){
         queue<KeyFrame*> empty0;
         queue<KeyFrame*> empty1;
         queue<KeyFrame*> empty2;
-        swap(mvpKF, empty0);
-        swap(mvpDKF, empty1);
-        swap(mvpUKF, empty2);
+        mvpKF.swap(empty0);
+        mvpDKF.swap(empty1);
+        mvpUKF.swap(empty2);
         return;
     }
 
@@ -314,7 +314,7 @@ void SendClassToServer::Run(){
         if(CheckFinish())
             break;
 
-        std::this_thread::sleep_for(std::chrono::microseconds(5000));
+        std::this_thread::sleep_for(std::chrono::microseconds(2000));
     }
 
     SetFinish();

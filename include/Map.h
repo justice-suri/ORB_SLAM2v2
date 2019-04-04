@@ -78,6 +78,11 @@ public:
 
     void clear();
 
+
+    void SetTest(KeyFrame *pKF){tKF=pKF;}
+    void GetTest();
+    KeyFrame* tKF;
+
     vector<KeyFrame*> mvpKeyFrameOrigins;
 
     std::mutex mMutexMapUpdate;

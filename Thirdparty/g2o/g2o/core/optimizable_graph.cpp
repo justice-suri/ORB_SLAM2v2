@@ -268,11 +268,13 @@ namespace g2o {
     assert(e && "Edge does not inherit from OptimizableGraph::Edge");
     if (! e)
       return false;
+    //cout << "eresult " << endl;
     bool eresult = HyperGraph::addEdge(e);
 
     if (! eresult)
       return false;
     e->_internalId = _nextEdgeId++;
+    //cout << "internalId : " << e->_internalId;
     if (! e->resolveParameters()){
       cerr << __FUNCTION__ << ": FATAL, cannot resolve parameters for edge " << e << endl;
       return false;
@@ -281,6 +283,7 @@ namespace g2o {
       cerr << __FUNCTION__ << ": FATAL, cannot resolve caches for edge " << e << endl;
       return false;
     } 
+    //cout << "jacobianWorkspace.updateSize()" << endl;
     _jacobianWorkspace.updateSize(e);
 
     return true;

@@ -118,15 +118,15 @@ public:
     static bool lId(KeyFrame* pKF1, KeyFrame* pKF2){
         return pKF1->mnId<pKF2->mnId;
     }
+    void SetORBvocabulary(ORBVocabulary *porbv) {mpORBvocabulary=porbv;}
+    void SetMap(Map *pMap){mpMap = pMap;}
+    void SetKeyFrameDatabase(KeyFrameDatabase* pKeyFrameDB){mpKeyFrameDB = pKeyFrameDB;}
+    std::vector< std::vector <std::vector<size_t> > > GetGrid(){return gridCopy;}
 
 public:
     // for serialization
     KeyFrame(); // Default constructor for serialization, need to deal with const member
     KeyFrame(ServerKeyFrame* skf, Map *pMap); // Create map to send a map to server
-    void SetORBvocabulary(ORBVocabulary *porbv) {mpORBvocabulary=porbv;}
-    void SetMap(Map *pMap){mpMap = pMap;}
-    void SetKeyFrameDatabase(KeyFrameDatabase* pKeyFrameDB){mpKeyFrameDB = pKeyFrameDB;}
-    std::vector< std::vector <std::vector<size_t> > > GetGrid(){return gridCopy;}
 private:
     // serialize is recommended to be private
     friend class boost::serialization::access;

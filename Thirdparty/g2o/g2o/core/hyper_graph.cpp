@@ -104,8 +104,8 @@ namespace g2o {
     //std::cout << (result.second) << std::endl;
     if (! result.second)
       return false;
+    //std::cout << "Vertex size : " << e->vertices().size() << std::endl;
     for (std::vector<Vertex*>::iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
-      //std::cout << "Vertex size : " << e->vertices().size() << std::endl;
       Vertex* v = *it;
       //std::cout << "Vertex : " << (void*)v << std::endl;
       v->edges().insert(e);

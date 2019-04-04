@@ -1,5 +1,6 @@
 #include "ServerViewer.h"
 #include "std_msgs/String.h"
+#include <thread>
 
 namespace ORB_SLAM2
 {
@@ -28,6 +29,38 @@ ServerViewer::ServerViewer(MapDrawer *pSMapDrawer, const string &strSettingPath)
 }
 
 ServerViewer::ServerViewer(ServerMap *pSMap, ORBParams params, MapDrawer *pSMapDrawer, const string &strSettingPath) : mpSMapDrawer(pSMapDrawer), mpSMap(pSMap), bConnect(true), bDisconnectRequest(false)
+{
+    cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
+
+    float fps = fSettings["Camera.fps"];
+    if (fps < 1)
+        fps = 30;
+    mT = 1e3 / fps;
+
+    mImageWidth = fSettings["Camera.width"];
+    mImageHeight = fSettings["Camera.height"];
+    if (mImageWidth < 1 || mImageHeight < 1)
+    {
+        mImageWidth = 640;
+        mImageHeight = 480;
+    }
+
+    mViewpointX = fSettings["Viewer.ViewpointX"];
+    mViewpointY = fSettings["Viewer.ViewpointY"];
+    mViewpointZ = fSettings["Viewer.ViewpointZ"];
+    mViewpointF = fSettings["Viewer.ViewpointF"];
+
+    clientId = params.getClientId();
+    mapBinaryPath = params.getMapBinaryPath();
+    mapOctomapPath = params.getMapOctomapPath();
+    string cmr = "CREATE_MAP_REQUEST" + to_string(clientId);
+    string cor = "CREATE_OCTOMAP_REQUEST" + to_string(clientId);
+    map_pub = params.getNodeHandle().advertise<std_msgs::String>(cmr, 1000);
+    octomap_pub = params.getNodeHandle().advertise<std_msgs::String>(cor, 1000);
+    bConnectRequest = false;
+}
+
+ServerViewer::ServerViewer(ServerMap *pSMap, ServerStreamThread* pSst, ORBParams params, MapDrawer *pSMapDrawer, const string &strSettingPath) : mpSMapDrawer(pSMapDrawer), mpSMap(pSMap), bConnect(true), bDisconnectRequest(false), mpSst(pSst)
 {
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
 
@@ -126,6 +159,13 @@ void ServerViewer::Run()
 
         if (menuSave)
         {
+            cout << "Wait for Update..." << endl;
+
+            while(mpSst->kfQueue.size()!=0||mpSst->mpQueue.size()!=0){
+                std::this_thread::sleep_for(std::chrono::microseconds(2000));
+            }
+            unique_lock<mutex> slock(mpSst->mMutexSave);
+
             ofstream out(mapBinaryPath, std::ios_base::binary);
 
             cout << "Creating new map" << endl;
@@ -146,6 +186,7 @@ void ServerViewer::Run()
                     checkSKF.push_back(itx->first);
                 }else{
                     tmpSKF.push_back(itx->first);
+                    continue;
                 }
                 if (pKF == NULL){
                     tmpSKF.push_back(itx->first);
@@ -174,7 +215,7 @@ void ServerViewer::Run()
             for (map<unsigned int, ServerMapPoint *>::iterator itx = mspSMP.begin(); itx != mspSMP.end(); itx++)
             {
                 MapPoint *pMP = new MapPoint(itx->second, mpMap);
-                cout << "mnid : " << pMP->UID << endl;
+                //cout << "mnid : " << pMP->UID << endl;
                 map<unsigned int, unsigned int> mObs = itx->second->mObservations;
                 //cout << "mObs size : " << mObs.size() << endl;
                 for (map<unsigned int, unsigned int>::iterator itor = mObs.begin(); itor != mObs.end(); itor++)
@@ -193,17 +234,9 @@ void ServerViewer::Run()
                     }
                 }
                 pMP->SetObservation();
-                cout << "WTF?!" << endl;
+                //cout << "WTF?!" << endl;
             }
 
-            for(int i = 0; i < tmpSKF.size(); i++){
-                mspSKF.erase(tmpSKF[i]);
-            }
-            for(int i = 0 ; i < tmpSMP.size(); i++){
-                mspSMP.erase(tmpSMP[i]);
-            }
-
-            cout << "mspMapPoints.insert" << endl;
             for (map<unsigned int, ServerKeyFrame *>::iterator itx = mspSKF.begin(); itx != mspSKF.end(); itx++)
             {
                 KeyFrame *pKF = mspKeyFrames[itx->first];
@@ -216,7 +249,23 @@ void ServerViewer::Run()
                         parentKF->AddChild(pKF);
                     }
                 }
+                //cout << "UpdateConnections" << endl;
+                //pKF->UpdateConnections();
+            }
+
+            for (map<unsigned int, ServerKeyFrame *>::iterator itx = mspSKF.begin(); itx != mspSKF.end(); itx++)
+            {
+                KeyFrame *pKF = mspKeyFrames[itx->first];
+                //cout << "mspKeyFrames[mpSMap->GetKeyFrameOrigin()] : " << mspKeyFrames[mpSMap->GetKeyFrameOrigin()]->isBad() << endl;
                 pKF->UpdateConnections();
+            }
+
+            for(int i = 0; i < tmpSKF.size(); i++){
+                cout << "KeyFrame erased : " << tmpSKF[i] << endl;
+                mspSKF.erase(tmpSKF[i]);
+            }
+            for(int i = 0 ; i < tmpSMP.size(); i++){
+                mspSMP.erase(tmpSMP[i]);
             }
 
             mpMap->AddKeyFrame(mspKeyFrames);

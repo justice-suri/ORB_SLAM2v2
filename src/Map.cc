@@ -36,6 +36,7 @@ void Map::AddKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspKeyFrames.insert(pKF);
+    //GetTest();
     if(pKF->mnId>mnMaxKFid)
         mnMaxKFid=pKF->mnId;
     if(mpSendClassToServer != NULL)
@@ -82,6 +83,7 @@ void Map::EraseMapPoint(MapPoint *pMP)
 void Map::EraseKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexMap);
+    cout << "[Map] Erased pKF : " << pKF->mnId << endl;
     mspKeyFrames.erase(pKF);
     if(mpSendClassToServer != NULL)
         mpSendClassToServer->EraseKeyFrame(pKF);
@@ -199,6 +201,24 @@ void Map::clear()
     mnMaxKFid = 0;
     mvpReferenceMapPoints.clear();
     mvpKeyFrameOrigins.clear();
+}
+
+void Map::GetTest()
+{
+    KeyFrame *t = NULL;
+    if(tKF != NULL){
+        set<KeyFrame*>::iterator it = mspKeyFrames.find(tKF);
+        if(it != mspKeyFrames.end())
+            t = *it;
+    }
+    if(t != NULL){
+        cout << "tKF : ";
+        if(t->isBad()){
+            cout << "true" << endl;
+        }else{
+            cout << "false" << endl;
+        }
+    }
 }
 
 template<class Archive>

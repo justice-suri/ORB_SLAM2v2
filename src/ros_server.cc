@@ -47,9 +47,11 @@ public:
 
     Communicator(char* argv1, char* argv2, ORBParams params){
         sm = new ServerMap();
+        sst = new ServerStreamThread();
+        sst->SetServerMap(sm);
         voca_path = string(argv1);
         mpSMapDrawer = new MapDrawer(sm, argv2);
-        mServerViewer = new ServerViewer(sm, params, mpSMapDrawer, argv2);
+        mServerViewer = new ServerViewer(sm, sst, params, mpSMapDrawer, argv2);
         string cmp = "CLIENT_MAP" + to_string(params.getClientId());
         client_map_pub = params.getNodeHandle().advertise<std_msgs::String>(cmp,1000);
         //Test for octomap_rviz
@@ -58,6 +60,7 @@ public:
         mapOctomapPath = params.getMapOctomapPath();
         clientId = params.getClientId();
         new thread(&ServerViewer::Run,mServerViewer);
+        new thread(&ServerStreamThread::Run,sst);
         cout << "Communicator Created" << endl;
     }
 
@@ -92,17 +95,22 @@ public:
         }
         if(!sm->ConnectClient)
             return;
+        sst->AddMapPointQueue(msg);
+        /*
         if(msg->command == INSERT)
             sm->AddMapPoint(new ServerMapPoint(msg));
         else if(msg->command == ERASE)
             sm->EraseMapPoint(msg->UID);
         else if(msg->command == UPDATE)
             sm->UpdateMapPoint(new ServerMapPoint(msg));
+        */
     }
 
     void KeyFrameData(const ORB_SLAM2v2::KF::ConstPtr& msg){
         if(!sm->ConnectClient)
             return;
+        sst->AddKeyFrameQueue(msg);
+        /*
         float tcw[16] = {msg->Tcw[0],msg->Tcw[1],msg->Tcw[2],msg->Tcw[3],
         msg->Tcw[4],msg->Tcw[5],msg->Tcw[6],msg->Tcw[7],
         msg->Tcw[8],msg->Tcw[9],msg->Tcw[10],msg->Tcw[11],
@@ -125,25 +133,29 @@ public:
         }else if(msg->command == UPDATE){
             //sm->UpdateKeyFrame(new ServerKeyFrame(msg->mnId, Tcw, Twc, Ow, cl, msg->Parent, lel));
             sm->UpdateKeyFrame(msg);
-        }
+        }*/
     }
 
     void MapPointData(const ORB_SLAM2v2::MP::ConstPtr& msg){
         if(msg->command == 4){
             mServerViewer->ActivateConnection();
+            sst->Release();
         }
         if(!sm->ConnectClient)
             return;
+        sst->AddMapPointQueue(msg);
+        /*
         if(msg->command == INSERT)
             sm->AddMapPoint(new ServerMapPoint(msg));
         else if(msg->command == ERASE)
             sm->EraseMapPoint(msg->UID);
         else if(msg->command == UPDATE)
             sm->UpdateMapPoint(new ServerMapPoint(msg));
+        */
     }
 
     void Shutdown(){
-
+        sst->RequestFinish();
     }
 
     void SendMap(const std_msgs::String::ConstPtr& msg);
@@ -151,6 +163,7 @@ public:
     void LoadMap(ServerMap *pSMap);
 
     ServerMap *sm;
+    ServerStreamThread *sst;
     MapDrawer *mpSMapDrawer;
     string strSettingsFile;
     string voca_path;
@@ -205,7 +218,14 @@ void Communicator::LoadMap(ServerMap* pSMap){
     sm = pSMap;
     mpSMapDrawer->getServerMap(sm);
     mServerViewer->getServerMap(sm);
+    sst->RequestStop();
+    while(!sst->IsStopped()){
+        std::this_thread::sleep_for(std::chrono::microseconds(2000));
+    }
+    sst->SetServerMap(sm);
     mServerViewer->DeactivateConnection();
+    sm->DisconnectToClient();
+    sst->Release();
 
     delete oldmap;
 }

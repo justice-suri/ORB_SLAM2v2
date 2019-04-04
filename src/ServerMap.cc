@@ -1,5 +1,11 @@
 #include "ServerMap.h"
 
+#include <thread>
+
+#define INSERT 0
+#define ERASE 1
+#define UPDATE 2
+
 namespace ORB_SLAM2{
 
 ServerMapPoint::ServerMapPoint(const ORB_SLAM2v2::MP::ConstPtr& msg){
@@ -367,6 +373,97 @@ void ServerKeyFrame::Swap(const ORB_SLAM2v2::KF::ConstPtr& msg){
     mnMaxY = msg->mnMaxY;
 }
 
+void ServerStreamThread::Run(){
+    while(1)
+    {
+        while(!mpQueue.empty())
+        {
+            unique_lock<mutex> lock(mMutexSave);
+            //cout << "mpQueue.size()" << mpQueue.size() << endl;
+            ORB_SLAM2v2::MP::ConstPtr& msg = mpQueue.front();
+            if(msg->command == INSERT)
+                sm->AddMapPoint(new ServerMapPoint(msg));
+            else if(msg->command == ERASE)
+                sm->EraseMapPoint(msg->UID);
+            else if(msg->command == UPDATE)
+                sm->UpdateMapPoint(new ServerMapPoint(msg));
+            unique_lock<mutex> lock2(mMutexMP);
+            mpQueue.pop();
+        }
+        while(!kfQueue.empty())
+        {
+            unique_lock<mutex> lock(mMutexSave);
+            //cout << "kfQueue.size()" << kfQueue.size() << endl;
+            ORB_SLAM2v2::KF::ConstPtr& msg = kfQueue.front();
+            if(msg->command == INSERT){
+                sm->AddKeyFrame(new ServerKeyFrame(msg));
+            }else if(msg->command == ERASE){
+                sm->EraseKeyFrame(msg->mnId);
+            }else if(msg->command == UPDATE){
+                sm->UpdateKeyFrame(msg);
+            }
+            unique_lock<mutex> lock2(mMutexKF);
+            kfQueue.pop();
+        }
+
+        if(CheckFinish())
+            break;
+
+        if(mbStopRequested){
+            mbStopRequested = false;
+            mbStop = true;
+            while(mbStop){
+                std::this_thread::sleep_for(std::chrono::microseconds(2000));
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::microseconds(2000));
+    }
+}
+
+void ServerStreamThread::RequestStop(){
+    unique_lock<mutex> lock(mMutexStop);
+    mbStopRequested = true;
+}
+
+bool ServerStreamThread::IsStopped(){
+    unique_lock<mutex> lock(mMutexStop);
+    return mbStop;
+}
+
+void ServerStreamThread::Release(){
+    unique_lock<mutex> lock(mMutexStop);
+    //unique_lock<mutex> lock1(mMutexSave);
+    queue<ORB_SLAM2v2::KF::ConstPtr> eKF;
+    queue<ORB_SLAM2v2::MP::ConstPtr> eMP;
+    kfQueue.swap(eKF);
+    mpQueue.swap(eMP);
+    mbStop = false;
+}
+
+void ServerStreamThread::RequestFinish(){
+    unique_lock<mutex> lock(mMutexFinish);
+    mbFinishRequested = true;
+}
+
+bool ServerStreamThread::CheckFinish(){
+    unique_lock<mutex> lock(mMutexFinish);
+    return mbFinishRequested;
+}
+
+void ServerStreamThread::AddKeyFrameQueue(const ORB_SLAM2v2::KF::ConstPtr& msg){
+    unique_lock<mutex> lock(mMutexKF);
+    kfQueue.push(msg);
+}
+void ServerStreamThread::AddMapPointQueue(const ORB_SLAM2v2::MP::ConstPtr& msg){
+    unique_lock<mutex> lock(mMutexMP);
+    mpQueue.push(msg);
+}
+
+void ServerStreamThread::SetServerMap(ServerMap *smap){
+    sm = smap;
+}
+
 void ServerMap::AddMapPoint(ServerMapPoint *smp){
     unique_lock<mutex> lock(mMutexMap);
     mspServerMapPoints.insert({smp->GetUID(), smp});
@@ -412,7 +509,7 @@ void ServerMap::UpdateKeyFrame(const ORB_SLAM2v2::KF::ConstPtr& msg){
     if(mspServerKeyFrames.find(msg->mnId) != mspServerKeyFrames.end()){
         mspServerKeyFrames.at(msg->mnId)->Swap(msg);
     }
-    cout << "Update KeyFrame ID : " << msg->mnId << endl;
+    cout << "Update KeyFrame ID : " << msg->mnId << " " << msg->Parent << endl;
 }
 
 map<unsigned int, ServerMapPoint*> ServerMap::GetAllMapPoints(){
@@ -442,7 +539,6 @@ void ServerMap::ConnectToClient(){
 void ServerMap::DisconnectToClient(){
     ConnectClient = false;
 }
-
 
 template<class Archive>
 void ServerKeyFrame::serialize(Archive &ar, const unsigned int version)

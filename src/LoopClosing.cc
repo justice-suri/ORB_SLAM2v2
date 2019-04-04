@@ -426,6 +426,8 @@ void LoopClosing::CorrectLoop()
     // Avoid new keyframes are inserted while correcting the loop
     mpLocalMapper->RequestStop();
 
+    if(mbTest)
+        cout << "If a Global Bundle Adjustment is running, abort it" << endl;
     // If a Global Bundle Adjustment is running, abort it
     if(isRunningGBA())
     {
@@ -447,6 +449,8 @@ void LoopClosing::CorrectLoop()
     {
         std::this_thread::sleep_for(std::chrono::microseconds(1000));
     }
+    if(mbTest)
+        cout << "[LoopClosing] Ensure current keyframe is updated" << endl;
 
     // Ensure current keyframe is updated
     mpCurrentKF->UpdateConnections();
@@ -461,6 +465,8 @@ void LoopClosing::CorrectLoop()
 
 
     {
+        if(mbTest)
+            cout << "[LoopClosing] Get Map Mutex" << endl;
         // Get Map Mutex
         unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
 
@@ -487,6 +493,8 @@ void LoopClosing::CorrectLoop()
             //Pose without correction
             NonCorrectedSim3[pKFi]=g2oSiw;
         }
+        if(mbTest)
+            cout << "[LoopClosing] Correct all MapPoints" << endl;
 
         // Correct all MapPoints obsrved by current keyframe and neighbors, so that they align with the other side of the loop
         for(KeyFrameAndPose::iterator mit=CorrectedSim3.begin(), mend=CorrectedSim3.end(); mit!=mend; mit++)
@@ -534,6 +542,8 @@ void LoopClosing::CorrectLoop()
             // Make sure connections are updated
             pKFi->UpdateConnections();
         }
+        if(mbTest)
+            cout << "[LoopClosing] Start Loop Fusion" << endl;
 
         // Start Loop Fusion
         // Update matched map points and replace if duplicated
@@ -555,6 +565,8 @@ void LoopClosing::CorrectLoop()
         }
 
     }
+    if(mbTest)
+        cout << "[LoopClosing] Fuse duplications" << endl;
 
     // Project MapPoints observed in the neighborhood of the loop keyframe
     // into the current keyframe and neighbors using corrected poses.
@@ -582,11 +594,15 @@ void LoopClosing::CorrectLoop()
             LoopConnections[pKFi].erase(*vit2);
         }
     }
+    if(mbTest)
+        cout << "[LoopClosing] Optimize graph" << endl;
 
     // Optimize graph
     Optimizer::OptimizeEssentialGraph(mpMap, mpMatchedKF, mpCurrentKF, NonCorrectedSim3, CorrectedSim3, LoopConnections, mbFixScale);
 
     mpMap->InformNewBigChange();
+    if(mbTest)
+        cout << "[LoopClosing] Add loop edge" << endl;
 
     // Add loop edge
     mpMatchedKF->AddLoopEdge(mpCurrentKF);
@@ -597,6 +613,8 @@ void LoopClosing::CorrectLoop()
     mbFinishedGBA = false;
     mbStopGBA = false;
     mpThreadGBA = new thread(&LoopClosing::RunGlobalBundleAdjustment,this,mpCurrentKF->mnId);
+    if(mbTest)
+        cout << "[LoopClosing] Loop closed. Release Local Mapping" << endl;
 
     // Loop closed. Release Local Mapping.
     mpLocalMapper->Release();    
@@ -706,6 +724,8 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
                 KeyFrame* pKF = lpKFtoCheck.front();
                 const set<KeyFrame*> sChilds = pKF->GetChilds();
                 cv::Mat Twc = pKF->GetPoseInverse();
+                cout << "lpKFtoCheck size : " << lpKFtoCheck.size() << endl;
+                cout << "lpKFtoCheck pKF : " << pKF->mnId << endl;
                 for(set<KeyFrame*>::const_iterator sit=sChilds.begin();sit!=sChilds.end();sit++)
                 {
                     KeyFrame* pChild = *sit;

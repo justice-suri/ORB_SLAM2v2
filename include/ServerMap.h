@@ -197,6 +197,38 @@ private:
     unsigned int KeyFrameOrigin=0;
 };
 
+class ServerStreamThread
+{
+public:
+    ServerStreamThread():mbFinishRequested(false),mbStopRequested(false),mbStop(false){};
+
+    void AddKeyFrameQueue(const ORB_SLAM2v2::KF::ConstPtr& msg);
+    void AddMapPointQueue(const ORB_SLAM2v2::MP::ConstPtr& msg);
+    void Run();
+    void RequestStop();
+    bool IsStopped();
+    void Release();
+    void RequestFinish();
+    bool CheckFinish();
+    void SetServerMap(ServerMap *smap);
+    
+    queue<ORB_SLAM2v2::KF::ConstPtr> kfQueue;
+    queue<ORB_SLAM2v2::MP::ConstPtr> mpQueue;
+
+    mutex mMutexSave;
+    mutex mMutexKF;
+    mutex mMutexMP;
+private:
+    ServerMap *sm;
+
+    mutex mMutexFinish;
+    mutex mMutexStop;
+
+    bool mbFinishRequested;
+    bool mbStopRequested;
+    bool mbStop;
+};
+
 }
 
 #endif

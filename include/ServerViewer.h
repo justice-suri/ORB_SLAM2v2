@@ -14,6 +14,7 @@ class ServerViewer
 public:
     ServerViewer(MapDrawer *pSMapDrawer, const string &strSettingPath);
     ServerViewer(ServerMap *pSMap, ORBParams params, MapDrawer *pSMapDrawer, const string &strSettingPath);
+    ServerViewer(ServerMap *pSMap, ServerStreamThread* pSst, ORBParams params, MapDrawer *pSMapDrawer, const string &strSettingPath);
     void Run();
     void ActivateConnection();
     void DeactivateConnection();
@@ -22,6 +23,7 @@ public:
 private:
     MapDrawer* mpSMapDrawer;
     ServerMap* mpSMap;
+    ServerStreamThread* mpSst;
 
     double mT;
     float mImageWidth, mImageHeight;

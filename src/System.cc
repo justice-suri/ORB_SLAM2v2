@@ -459,10 +459,8 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
         unique_lock<mutex> lock(mMutexReset);
         if(mbReset)
         {
-            mpSendClassToServer->RequestStop();
             mpTracker->Reset();
             mbReset = false;
-            mpSendClassToServer->Release();
         }
     }
 
@@ -841,7 +839,7 @@ void System::SaveMap(const string &filename)
     cout << " ...done" << std::endl;
     out.close();
 
-    std:string cmd = "cp "+mapfile+" "+mapfile+".copy";
+    string cmd = "cp "+mapfile+" "+mapfile+".copy";
     int ld = system(cmd.c_str());
 
     /////////////////////////////
@@ -1127,9 +1125,11 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     mpLoopCloser->ReadyForMemoryConnect = true;
     mpLocalMapper->ReadyForMemoryConnect = true;
     while(!(mpLoopCloser->WaitForMemoryConnect&&mpLocalMapper->WaitForMemoryConnect)){
-        cout << mpLoopCloser->WaitForMemoryConnect<< " " << mpLocalMapper->WaitForMemoryConnect << endl;
+        //cout << mpLoopCloser->WaitForMemoryConnect<< " " << mpLocalMapper->WaitForMemoryConnect << endl;
         std::this_thread::sleep_for(std::chrono::microseconds(2000));
     }
+
+    mpSendClassToServer->RequestStop();
     
     mpMap = new Map();
     
@@ -1146,6 +1146,8 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     unsigned long mnFrameId = 0;
     unsigned long mnMapPointId = 0;
 
+    vector<unsigned long> kflist;
+
     for(vector<KeyFrame*>::iterator itx = mpKFs.begin(); itx != mpKFs.end(); itx++){
         if(*itx==NULL){
             cout << "itx =  NULL" << endl;
@@ -1155,12 +1157,23 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
         (*itx)->ComputeBoW();
         mpKeyFrameDatabase->add(*itx);
         (*itx)->SetKeyFrameDatabase(mpKeyFrameDatabase);
-        (*itx)->UpdateConnections();
+        //(*itx)->UpdateConnections();
         if( (*itx)->mnId > mnFrameId)
             mnFrameId = (*itx)->mnId;
+        kflist.push_back((*itx)->mnId);
+        //if((*itx)->mnId == 0){
+            //mpMap->SetTest((*itx));
+            cout << "isBad : " << (*itx)->isBad() << " KF : " << (*itx)->mnId << endl;
+        //}
+        if((*itx)->GetParent()!=NULL){
+            cout << "Parent : " << (*itx)->GetParent()->mnId << " KF : " << (*itx)->mnId << endl;
+        }
     }
-
+    sort(kflist.begin(), kflist.end());
     cout << "[System] KeyFrame Complete! " << endl;
+    for(int k = 0 ; k < kflist.size() ; k++){
+        cout << kflist[k] << " ";
+    }
 
     for(vector<MapPoint*>::iterator itx = mpMPs.begin(); itx != mpMPs.end(); itx++){
         if(*itx==NULL){
@@ -1194,7 +1207,6 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     delete oldDB;
 
     cout << "Done!" << endl;
-    mpSendClassToServer->ActivateConnectionToServer();
     mpLoopCloser->WaitForMemoryConnect = false;
     mpLocalMapper->WaitForMemoryConnect = false;
     mpLoopCloser->RequestReset();
@@ -1205,6 +1217,7 @@ void System::ReceiveMapCallback(const std_msgs::String::ConstPtr& msg){
     mbActivateLocalizationMode = false;
     mbReset = false;
     mpSendClassToServer->ActivateConnectionToServer();
+    mpSendClassToServer->Release();
 
 
     cout << (clock() - start)<< endl;

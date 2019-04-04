@@ -498,7 +498,8 @@ template<class Archive>
 void MapPoint::serialize(Archive &ar, const unsigned int version)
 {
     ar & UID & mnId & nNextId & mnFirstKFid & mnFirstFrame & nObs;
-    cout << "Tracking related vars" << endl;
+    if(mbTest)
+        cout << "Tracking related vars" << endl;
     // Tracking related vars
     ar & mTrackProjX;
     ar & mTrackProjY;

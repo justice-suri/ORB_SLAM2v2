@@ -482,6 +482,7 @@ void KeyFrame::SetBadFlag()
             return;
         }
     }
+    cout << "[SetBagFlag] mnId : " << mnId << endl;
     if(mbTest)
         cout << "[KeyFrame] SetBadFlag()" << endl;
 
@@ -503,6 +504,9 @@ void KeyFrame::SetBadFlag()
         set<KeyFrame*> sParentCandidates;
         sParentCandidates.insert(mpParent);
 
+        cout << "[KeyFrame]Erased KeyFrame : " << mnId <<  endl;
+        cout << " Parent : " << mpParent->mnId << endl;
+
         // Assign at each iteration one children with a parent (the pair with highest covisibility weight)
         // Include that children as new parent candidate for the rest
         while(!mspChildrens.empty())
@@ -512,12 +516,13 @@ void KeyFrame::SetBadFlag()
             int max = -1;
             KeyFrame* pC;
             KeyFrame* pP;
-
+            cout << " Children : ";
             for(set<KeyFrame*>::iterator sit=mspChildrens.begin(), send=mspChildrens.end(); sit!=send; sit++)
             {
                 KeyFrame* pKF = *sit;
                 if(mbTest)
                     cout << "[KeyFrame] pKF -> " << pKF->mnId << endl;
+                cout << pKF->mnId << " ";
                 if(pKF->isBad())
                     continue;
 
@@ -541,6 +546,7 @@ void KeyFrame::SetBadFlag()
                     }
                 }
             }
+            cout << endl;
 
             if(bContinue)
             {
@@ -703,7 +709,8 @@ KeyFrame::KeyFrame(ServerKeyFrame* skf, Map* pMap):
     mbf(skf->mbf), mb(skf->mb), mThDepth(skf->mThDepth), N(skf->mvKeysUn.size()), mnScaleLevels(skf->mnScaleLevels), mfScaleFactor(skf->mfScaleFactor),
     mfLogScaleFactor(skf->mfLogScaleFactor), mvuRight(skf->mvuRight), mvDepth(skf->mvDepth), mvScaleFactors(skf->mvScaleFactors),
     mnMinX(skf->mnMinX), mnMinY(skf->mnMinY), mnMaxX(skf->mnMaxX), mvLevelSigma2(skf->mvLevelSigma2), mvInvLevelSigma2(skf->mvInvLevelSigma2),
-    mnMaxY(skf->mnMaxY), mDescriptors(skf->mDescriptors.clone()), mFeatVec(skf->mFeatVec), mvKeys(skf->mvKeys), mvKeysUn(skf->mvKeysUn), mpMap(pMap)
+    mnMaxY(skf->mnMaxY), mDescriptors(skf->mDescriptors.clone()), mFeatVec(skf->mFeatVec), mvKeys(skf->mvKeys), mvKeysUn(skf->mvKeysUn), mpMap(pMap), mbFirstConnection(true), mbNotErase(false),
+    mbToBeErased(false), mbBad(false)
 {
     mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
     mpKeyFrameDB = static_cast<KeyFrameDatabase*>(NULL);
